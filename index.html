@@ -10,17 +10,21 @@
       * { box-sizing: border-box; }
       body { margin: 0; min-height: 100vh; }
       .wrap { max-width: 640px; margin: 0 auto; padding: 20px 16px 40px; }
-      .header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+      .header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
       .logo { width: 44px; height: 44px; border-radius: 14px; background: #059669; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 21px; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
       h1 { font-size: 20px; margin: 0; line-height: 1.2; }
       .sub { font-size: 12px; color: #64748b; margin: 2px 0 0; }
+      .banner { border-radius: 12px; padding: 12px 14px; font-size: 13px; margin-bottom: 14px; line-height: 1.5; }
+      .banner.red { background:#fef2f2; border:1px solid #fecdd3; color:#b91c1c; }
+      .banner.orange { background:#fffbeb; border:1px solid #fde68a; color:#b45309; }
+      .banner.blue { background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; }
       .cards { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
-      .card { flex: 1; min-width: 165px; background: #fff; border-radius: 16px; padding: 18px 18px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.07); }
+      .card { flex: 1; min-width: 160px; background: #fff; border-radius: 16px; padding: 16px 16px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.07); }
       .card .lbl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #64748b; }
-      .card .val { font-size: 28px; font-weight: 700; margin-top: 4px; }
+      .card .val { font-size: 26px; font-weight: 700; margin-top: 4px; }
       .card .small { font-size: 11px; color: #64748b; margin-top: 2px; }
-      .emerald { color: #059669; } .rose { color: #e11d48; } .sky { color: #0284c7; } .slate { color: #334155; }
-      .bar { height: 8px; background: #f1f5f9; border-radius: 999px; overflow: hidden; margin-top: 10px; }
+      .emerald { color: #059669; } .rose { color: #e11d48; } .sky { color: #0284c7; } .slate { color: #334155; } .amber { color: #d97706; }
+      .bar { height: 7px; background: #f1f5f9; border-radius: 999px; overflow: hidden; margin-top: 10px; }
       .bar > div { height: 100%; background: #10b981; border-radius: 999px; }
       .panel { background: #fff; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.07); padding: 18px; margin-bottom: 14px; }
       .tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; background: #eef2f7; border-radius: 12px; padding: 4px; margin-bottom: 16px; }
@@ -35,8 +39,12 @@
       input[type="date"], input[type="text"], input[type="number"], .fakeinput { width: 100%; border: 1px solid #e2e8f0; border-radius: 9px; padding: 9px 10px; font-size: 15px; font-family: inherit; background: #fff; color: #1e293b; }
       .fakeinput { background: #f8fafc; }
       .field { margin-bottom: 12px; }
+      .bucketRow { display: flex; gap: 8px; margin-bottom: 12px; }
+      .bucketRow button { flex: 1; padding: 9px 0; border-radius: 10px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; }
+      .bucketRow button.on { background: #0f172a; color: #fff; border-color: transparent; }
       .preview { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; padding: 14px; margin-bottom: 12px; font-size: 14px; }
       .preview strong { font-weight: 700; }
+      .preview .detail { font-size: 12px; color: #475569; margin-top: 4px; }
       .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
       .chip { font-size: 11px; padding: 4px 8px; border-radius: 7px; background: #d1fae5; color: #065f46; }
       .chip.off { background: #e2e8f0; color: #94a3b8; text-decoration: line-through; }
@@ -51,7 +59,6 @@
       .htitle { font-size: 14px; font-weight: 500; } .htitle span { color: #94a3b8; font-weight: 400; }
       .hsub { font-size: 11px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .hamt { font-size: 14px; font-weight: 600; white-space: nowrap; }
-      .amber { color: #d97706; }
       .del { border: 0; background: transparent; color: #cbd5e1; font-size: 15px; padding: 8px; cursor: pointer; border-radius: 9px; }
       .del:hover { color: #e11d48; background: #fff1f2; }
       .switchrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
@@ -81,6 +88,7 @@
         </div>
       </div>
 
+      <div class="banner" id="soldage"></div>
       <div class="cards" id="stats"></div>
 
       <div class="tabs">
@@ -114,6 +122,10 @@
               <input type="text" inputmode="decimal" id="amount" placeholder="9,75" />
             </div>
           </div>
+          <div id="bucketRow" class="bucketRow hidden">
+            <button id="bk-n1" onclick="setBucket('n-1')">Compteur CP N-1</button>
+            <button id="bk-n" onclick="setBucket('n')">Compteur CP N</button>
+          </div>
 
           <div class="field">
             <label for="note">Note (facultatif)</label>
@@ -126,7 +138,8 @@
         </div>
         <p class="hint">
           Décompte CP en jours ouvrables : le décompte débute le premier jour où tu aurais dû travailler, le 1ᵉʳ samedi non travaillé n'est pas
-          compté, les suivants le sont. Dimanches et jours fériés chômés jamais décomptés.
+          compté, les suivants le sont. Dimanches et jours fériés chômés jamais décomptés. Les CP sont pris en priorité sur le compteur N-1
+          (celui qui se solde au 31 mai).
         </p>
       </div>
 
@@ -161,11 +174,17 @@
             <p>Jours fériés chômés non décomptés<small>Fériés tombant pendant les congés : jamais comptés.</small></p>
             <span class="sw"><input type="checkbox" id="swFer" /><span class="t"></span></span>
           </div>
+          <div class="switchrow">
+            <p>Acquisition automatique +2,5 j / mois<small>Les CP N s'accumulent tout seuls depuis le 1ᵉʳ juin, à chaque mois travaillé.</small></p>
+            <span class="sw"><input type="checkbox" id="swAuto" /><span class="t"></span></span>
+          </div>
           <div class="infobox">
             <strong>Règles CP (branche agricole / CUMA)</strong><br />
-            · Acquisition : 2,5 jours ouvrables par mois travaillé, soit 30 j / an.<br />
+            · Acquisition automatique : +2,5 jours ouvrables par mois travaillé sur le compteur CP N (soit 30 j / an). Si un mois n'est pas
+            travaillé en entier, ajoute une écriture « CP acquis » négative sur le compteur N pour ajuster.<br />
             · Période de référence : du 1ᵉʳ juin au 31 mai (défaut en l'absence d'accord).<br />
-            · Ajoute tes droits chaque mois via « CP acquis » (+2,5 j).<br />
+            · <strong>Soldage</strong> : les CP N-1 doivent être posés avant le 31 mai suivant, sinon ils sont perdus (l'appli affiche un
+            compte à rebours et décompte toujours en priorité sur les N-1).<br />
             · Tes données sont enregistrées dans ce navigateur, rien n'est envoyé sur internet.
           </div>
           <button class="danger" onclick="resetAll()">Tout effacer</button>
@@ -212,12 +231,28 @@
         return false;
       }
 
+      // --------------------------------------------------- soldage au 31 mai
+      // Période de référence : 1er juin -> 31 mai. Les CP N-1 (acquis sur la
+      // période précédente) doivent être posés avant le 31 mai de l'année en
+      // cours de prise, sinon ils sont perdus.
+      function soldageInfo() {
+        var now = new Date();
+        var periodStartYear = now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1; // juin = 5
+        var deadline = new Date(periodStartYear + 1, 4, 31); // 31 mai de l'année suivante
+        var todayNorm = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        var daysLeft = Math.round((deadline.getTime() - todayNorm) / 86400000);
+        return { deadline: deadline, daysLeft: daysLeft };
+      }
+
       // ------------------------------------------------------------- réglages
-      var DEFAULT_SETTINGS = { weeklyHours: 39, workDays: [1, 2, 3, 4], skipFirstSaturday: true, skipFeries: true };
-      var KEY = "gestion-conges-cuma-standalone-v1";
+      var DEFAULT_SETTINGS = { weeklyHours: 39, workDays: [1, 2, 3, 4], skipFirstSaturday: true, skipFeries: true, autoAcquis: true };
+      var KEY = "gestion-conges-cuma-standalone-v3";
 
       function seedEntries() {
-        return [{ id: "seed-cp", type: "cp_acquis", date: toISO(new Date()), days: 30, note: "Droits de la période en cours (30 j ouvrables)", created: 0 }];
+        var today = toISO(new Date());
+        return [
+          { id: "seed-n1", type: "cp_acquis", bucket: "n-1", date: today, days: 23, note: "Solde CP N-1 d'après My Silae (14/10/2026)", created: 0 }
+        ];
       }
       function loadState() {
         try {
@@ -264,6 +299,46 @@
         return n;
       }
 
+      // ---------------------------------------------------------------- soldes
+      // Acquisition automatique : 2,5 j ouvrables par mois travaillé,
+      // comptés depuis le 1er juin (début de la période de référence).
+      function completedMonths() {
+        var now = new Date();
+        var startYear = now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1; // juin = 5
+        var c = (now.getFullYear() - startYear) * 12 + (now.getMonth() - 5);
+        return Math.max(0, c);
+      }
+      function autoAcquisDays() {
+        return state.settings.autoAcquis ? 2.5 * completedMonths() : 0;
+      }
+      function sumAcquis(bucket) {
+        var t = bucket === "n" ? autoAcquisDays() : 0;
+        for (var i = 0; i < state.entries.length; i++) {
+          var e = state.entries[i];
+          if (e.type === "cp_acquis" && (e.bucket || "n") === bucket) t += e.days || 0;
+        }
+        return t;
+      }
+      function sumPris(field) {
+        var t = 0;
+        for (var i = 0; i < state.entries.length; i++) {
+          var e = state.entries[i];
+          if (e.type === "cp_pris") t += e[field] || 0;
+        }
+        return t;
+      }
+      function soldeN1() { return sumAcquis("n-1") - sumPris("daysN1"); }
+      function soldeN() { return sumAcquis("n") - sumPris("daysN"); }
+      function soldeRecup() {
+        var t = 0;
+        for (var i = 0; i < state.entries.length; i++) {
+          var e = state.entries[i];
+          if (e.type === "recup_gain") t += e.hours;
+          if (e.type === "recup_pris") t -= e.hours;
+        }
+        return t;
+      }
+
       // ------------------------------------------------------------------- UI
       var TYPES = [
         { id: "cp_pris", label: "🌴 Congé payé", cls: "em" },
@@ -272,13 +347,9 @@
         { id: "cp_acquis", label: "➕ CP acquis", cls: "em" }
       ];
       var formType = "cp_pris";
+      var acquisBucket = "n";
 
       function dailyHours() { return state.settings.weeklyHours / Math.max(state.settings.workDays.length, 1); }
-      function sum(type, field) {
-        var t = 0;
-        for (var i = 0; i < state.entries.length; i++) if (state.entries[i].type === type) t += state.entries[i][field] || 0;
-        return t;
-      }
 
       function setTab(tab) {
         ["poser", "histo", "reglages"].forEach(function (t) {
@@ -287,16 +358,19 @@
         });
       }
 
+      function setBucket(b) { acquisBucket = b; renderBucket(); }
+
       function setFormType(t) {
         formType = t;
         var isRange = t === "cp_pris" || t === "recup_pris";
         document.getElementById("rangeFields").classList.toggle("hidden", !isRange);
         document.getElementById("singleFields").classList.toggle("hidden", isRange);
+        document.getElementById("bucketRow").classList.toggle("hidden", t !== "cp_acquis");
         document.getElementById("dateLbl").textContent = t === "recup_gain" ? "Date (ex : vendredi travaillé)" : "Date";
         document.getElementById("amountLbl").textContent = t === "recup_gain" ? "Heures gagnées" : "Jours ouvrables acquis";
         document.getElementById("amount").value = t === "recup_gain" ? String(dailyHours()).replace(".", ",") : "2,5";
         document.getElementById("msg").textContent = "";
-        renderTypes(); updateForm();
+        renderTypes(); renderBucket(); updateForm();
       }
 
       function renderTypes() {
@@ -310,6 +384,10 @@
           el.appendChild(b);
         });
       }
+      function renderBucket() {
+        document.getElementById("bk-n1").className = acquisBucket === "n-1" ? "on" : "";
+        document.getElementById("bk-n").className = acquisBucket === "n" ? "on" : "";
+      }
 
       function previewData() {
         if (formType !== "cp_pris" && formType !== "recup_pris") return null;
@@ -320,7 +398,8 @@
         var bad = !!(eParsed && eParsed < s);
         if (formType === "cp_pris") {
           var r = decompteCP(s, e, state.settings);
-          return { kind: "cp", bad: bad, days: r.days, items: r.items };
+          var onN1 = Math.min(r.days, Math.max(0, soldeN1()));
+          return { kind: "cp", bad: bad, days: r.days, items: r.items, onN1: onN1, onN: r.days - onN1 };
         }
         var n = countWorkDays(s, e, state.settings);
         return { kind: "recup", bad: bad, n: n, hours: n * dailyHours() };
@@ -331,8 +410,7 @@
         var box = document.getElementById("preview");
         if (!pv) { box.classList.add("hidden"); return; }
         box.classList.remove("hidden");
-        var cpRest = sum("cp_acquis", "days") - sum("cp_pris", "days");
-        var recSolde = sum("recup_gain", "hours") - sum("recup_pris", "hours");
+        var recSolde = soldeRecup();
         if (pv.bad) {
           box.innerHTML = "<span class='rose'>⚠️ La date de fin est avant la date de début.</span>";
           return;
@@ -340,7 +418,9 @@
         var html = "";
         if (pv.kind === "cp") {
           html = "<strong class='emerald'>" + pv.days + " jour" + (pv.days > 1 ? "s" : "") + " ouvrable" + (pv.days > 1 ? "s" : "") + "</strong> décompté" +
-            (pv.days > 1 ? "s" : "") + " des CP<span style='color:#64748b'> · solde CP après : " + fmtNum(cpRest - pv.days) + " j</span>";
+            (pv.days > 1 ? "s" : "") +
+            "<div class='detail'>dont <strong>" + fmtNum(pv.onN1) + " j sur CP N-1</strong> et <strong>" + fmtNum(pv.onN) + " j sur CP N</strong>" +
+            "<br/>solde CP N-1 après : " + fmtNum(soldeN1() - pv.onN1) + " j · solde CP N après : " + fmtNum(soldeN() - pv.onN) + " j</div>";
           var chips = "";
           pv.items.forEach(function (it) {
             chips += "<span class='chip" + (it.count ? "" : " off") + "'>" + fmtDayShort(it.d) + (it.reason ? " · " + it.reason : "") + "</span>";
@@ -372,7 +452,9 @@
             entry.start = document.getElementById("start").value;
             entry.end = document.getElementById("end").value || entry.start;
             entry.days = pv.days;
-            msgEl.textContent = "✅ Congé enregistré : " + pv.days + " j ouvrable" + (pv.days > 1 ? "s" : "") + " décompté" + (pv.days > 1 ? "s" : "") + ".";
+            entry.daysN1 = pv.onN1;
+            entry.daysN = pv.onN;
+            msgEl.textContent = "✅ Congé enregistré : " + pv.days + " j (dont " + fmtNum(pv.onN1) + " sur CP N-1).";
           } else {
             if (pv.n <= 0) { msgEl.textContent = "⚠️ Aucun jour travaillé sur cette période."; return; }
             entry.type = "recup_pris";
@@ -389,8 +471,8 @@
         } else {
           var j = parseAmount(), d2 = document.getElementById("date").value;
           if (!d2 || j === 0) { msgEl.textContent = "⚠️ Indique une date et un nombre de jours."; return; }
-          entry.type = "cp_acquis"; entry.date = d2; entry.days = j;
-          msgEl.textContent = "✅ " + fmtNum(j) + " j ouvrables acquis ajoutés.";
+          entry.type = "cp_acquis"; entry.date = d2; entry.days = j; entry.bucket = acquisBucket;
+          msgEl.textContent = "✅ " + fmtNum(j) + " j ajoutés au compteur CP " + (acquisBucket === "n-1" ? "N-1" : "N") + ".";
         }
         state.entries.push(entry);
         persist();
@@ -427,21 +509,35 @@
       // ----------------------------------------------------------------- rendu
       function render() {
         var s = state.settings, dh = dailyHours();
-        var cpAcquis = sum("cp_acquis", "days"), cpPris = sum("cp_pris", "days"), cpRest = cpAcquis - cpPris;
-        var recSolde = sum("recup_gain", "hours") - sum("recup_pris", "hours");
+        var n1 = soldeN1(), n = soldeN(), recSolde = soldeRecup();
+        var soldage = soldageInfo();
+        var dLbl = "le 31 mai " + soldage.deadline.getFullYear();
 
         document.getElementById("subtitle").textContent =
           s.weeklyHours + " h · " + s.workDays.map(function (d) { return DAY_LABELS[d]; }).join("–") + " · Convention collective CUMA";
 
-        var pct = cpAcquis > 0 ? Math.max(0, Math.min(100, (cpRest / cpAcquis) * 100)) : 0;
+        // Bannière de soldage
+        var ban = document.getElementById("soldage");
+        if (n1 > 0) {
+          var cls = soldage.daysLeft <= 30 ? "red" : (soldage.daysLeft <= 90 ? "orange" : "blue");
+          ban.className = "banner " + cls;
+          ban.innerHTML = "🗓️ <strong>Soldage " + dLbl + "</strong> — il te reste <strong>" + fmtNum(n1) + " j de CP N-1</strong> à poser d'ici " +
+            soldage.daysLeft + " jour" + (soldage.daysLeft > 1 ? "s" : "") + ", sinon ils seront perdus.";
+          ban.classList.remove("hidden");
+        } else {
+          ban.classList.add("hidden");
+        }
+
+        // Cartes de soldes
+        var pctN1 = sumAcquis("n-1") > 0 ? Math.max(0, Math.min(100, (n1 / sumAcquis("n-1")) * 100)) : 0;
         document.getElementById("stats").innerHTML =
-          "<div class='card'><div class='lbl'>CP restants</div><div class='val " + (cpRest < 0 ? "rose" : "emerald") + "'>" + fmtNum(cpRest) + " j</div>" +
-          "<div class='small'>sur " + fmtNum(cpAcquis) + " jours ouvrables acquis</div>" +
-          "<div class='bar'><div style='width:" + pct + "%'></div></div></div>" +
+          "<div class='card'><div class='lbl'>CP N-1 · à poser avant le 31 mai</div><div class='val " + (n1 < 0 ? "rose" : "emerald") + "'>" + fmtNum(n1) + " j</div>" +
+          "<div class='small'>soldage " + dLbl + " · dans " + soldage.daysLeft + " j</div>" +
+          "<div class='bar'><div style='width:" + pctN1 + "%'></div></div></div>" +
+          "<div class='card'><div class='lbl'>CP N · période en cours</div><div class='val " + (n < 0 ? "rose" : "emerald") + "'>" + fmtNum(n) + " j</div>" +
+          "<div class='small'>" + (state.settings.autoAcquis ? "dont " + fmtNum(autoAcquisDays()) + " j automatiques (" + completedMonths() + " mois × 2,5 j)" : "acquis depuis le 1ᵉʳ juin") + "</div></div>" +
           "<div class='card'><div class='lbl'>Récup disponible</div><div class='val " + (recSolde < 0 ? "rose" : "sky") + "'>" + fmtNum(recSolde) + " h</div>" +
-          "<div class='small'>≈ " + fmtNum(Math.floor((recSolde / dh) * 2) / 2) + " jour(s) de " + fmtNum(dh) + " h</div></div>" +
-          "<div class='card'><div class='lbl'>CP pris</div><div class='val slate'>" + fmtNum(cpPris) + " j</div>" +
-          "<div class='small'>cette période de référence</div></div>";
+          "<div class='small'>≈ " + fmtNum(Math.floor((recSolde / dh) * 2) / 2) + " jour(s) de " + fmtNum(dh) + " h</div></div>";
 
         // Historique
         var histo = "";
@@ -455,9 +551,10 @@
               icon = "🌴"; title = "Congé payé"; cls = "emerald";
               var st = parseISO(e.start), en = parseISO(e.end);
               detail = st && en && e.start !== e.end ? "du " + fmtDay(st) + " au " + fmtDay(en) : st ? "le " + fmtDay(st) : e.start;
-              amount = "−" + fmtNum(e.days) + " j ouvr.";
+              amount = "−" + fmtNum(e.days) + " j";
+              if ((e.daysN1 || 0) > 0 && (e.daysN || 0) > 0) amount += " (" + fmtNum(e.daysN1) + " N-1 + " + fmtNum(e.daysN) + " N)";
             } else if (e.type === "cp_acquis") {
-              icon = "➕"; title = "CP acquis"; cls = "emerald";
+              icon = "➕"; title = "CP acquis " + ((e.bucket || "n") === "n-1" ? "N-1" : "N"); cls = "emerald";
               detail = e.date ? "le " + fmtDay(parseISO(e.date)) : "";
               amount = "+" + fmtNum(e.days) + " j";
             } else if (e.type === "recup_gain") {
@@ -494,6 +591,7 @@
         });
         document.getElementById("swSat").checked = s.skipFirstSaturday;
         document.getElementById("swFer").checked = s.skipFeries;
+        document.getElementById("swAuto").checked = !!s.autoAcquis;
 
         document.getElementById("swSat").onchange = function () {
           state.settings.skipFirstSaturday = this.checked; persist(); render();
@@ -501,8 +599,12 @@
         document.getElementById("swFer").onchange = function () {
           state.settings.skipFeries = this.checked; persist(); render();
         };
+        document.getElementById("swAuto").onchange = function () {
+          state.settings.autoAcquis = this.checked; persist(); render();
+        };
 
         renderTypes();
+        renderBucket();
         updateForm();
       }
 
