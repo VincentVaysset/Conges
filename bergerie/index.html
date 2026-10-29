@@ -19,7 +19,12 @@
   #map{width:100%;height:100%;display:block;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   .zooms{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px}
   .zooms button{width:38px;height:38px;background:#fff;border:1px solid #c9c2b6;color:var(--encre);font-size:17px;display:flex;align-items:center;justify-content:center;padding:0}
-  #panel{background:#fff;border-top:1px solid #ddd6c8;padding:10px 12px 14px;max-height:50dvh;overflow:auto;flex-shrink:0}
+  #tabs{display:flex;gap:6px;overflow-x:auto;padding:8px 10px 4px;background:#fff;border-top:1px solid #ddd6c8;flex-shrink:0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  #tabs::-webkit-scrollbar{display:none}
+  .tab{display:flex;align-items:center;gap:5px;border-radius:999px;padding:7px 12px;border:2px solid #e4ddcd;background:#f4efe4;color:#3c3a34;font-weight:700;font-size:14px;white-space:nowrap;flex-shrink:0}
+  .tab.on{border-color:var(--vert);background:#eaf2ec}
+  .tab .dot{width:12px;height:12px}
+  #panel{background:#fff;padding:4px 12px 14px;max-height:46dvh;overflow:auto;flex-shrink:0}
   .ph{font-weight:700;color:var(--vert);display:flex;align-items:center;gap:8px;margin:2px 0 4px;flex-wrap:wrap}
   .dot{width:14px;height:14px;border-radius:5px;display:inline-block;flex-shrink:0}
   .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0}
@@ -31,6 +36,7 @@
   button.warn{background:var(--danger);color:#fff}
   .closep{margin-left:auto;background:#efe9dc;color:#5a5248;padding:4px 10px;border-radius:8px}
   .btnsm{background:#efe9dc;color:#5a5248;padding:4px 8px;border-radius:8px;font-size:14px}
+  .btnsm.danger{background:#fdeceb;color:#a33b32}
   input{font:inherit;border:1px solid #c9c2b6;border-radius:9px;padding:9px 8px;background:#fff;color:var(--encre);font-size:16px;text-align:center}
   input.short{width:76px}
   .hint{font-size:13px;color:#7a7267;margin-top:8px;line-height:1.45}
@@ -52,13 +58,13 @@
   .lrow .nm{font-weight:700}
   .su{font-size:12px;color:#9a9184;border:1px solid #d8d1c3;border-radius:6px;padding:2px 6px;margin-left:2px}
   .trow{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #eee7d8;flex-wrap:wrap}
+  .notice{background:#fdeceb;color:#a33b32;border-radius:8px;padding:6px 10px;font-size:13px;margin:6px 0}
 </style>
 </head>
 <body>
 <header>
   <div class="hrow">
     <h1>🐑 Ma bergerie — lots &amp; rations</h1>
-    <button class="btnw" id="btnTrie" title="Réglage des trémies">🚜</button>
     <button class="btnw" id="btnReset" title="Tout remettre à zéro">⟲</button>
   </div>
 </header>
@@ -70,6 +76,7 @@
     <button id="zfit" title="Vue complète">▢</button>
   </div>
 </main>
+<nav id="tabs"></nav>
 <section id="panel"></section>
 <script>
 'use strict';
@@ -122,7 +129,7 @@ function loadS(){
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
 var state=loadS()||defaultState();
-var sel=null,showTrie=false,trieF=null;
+var sel=null,showTrie=false,trieF=null,editName=null,editFeed=null,arm=null,notice='';
 
 /* ============ géométrie ============ */
 function xOfK(k){return DBL_X0+DBL_LEN*k/DBL_PL;}
@@ -142,8 +149,8 @@ function segsOf(i){
 function lotById(id){for(var x=0;x<state.lots.length;x++)if(state.lots[x].id===id)return state.lots[x];return null;}
 function lotCol(id){return LOT_COLS[id%LOT_COLS.length];}
 function colFeed(id){return FEED_COLS[id%FEED_COLS.length];}
-function lotName(l){return l&&l.name?l.name:'Lot '+(l.id+1);}
-function lotShort(l){return l&&l.name?l.name.slice(0,14):'L'+(l.id+1);}
+function lotName(l){return l?(l.name?l.name:'Lot '+(l.id+1)):'—';}
+function lotShort(l){return l?(l.name?l.name.slice(0,14):'L'+(l.id+1)):'—';}
 function lotStats(id){
   var t=[0,0,0,0],segs=[];
   for(var i=0;i<4;i++)segsOf(i).forEach(function(sg){
@@ -156,7 +163,7 @@ function lotStats(id){
 }
 function feedVal(l,fid){return (l.r&&l.r[fid])||0;}   /* kg par brebis */
 function setFeedVal(l,fid,v){l.r=l.r||{};l.r[fid]=v;}
-function sumRations(l){var s=0;state.feeds.forEach(function(f){s+=feedVal(l,f.id);});return s;}
+function sumRations(l){var s=0;if(!l)return 0;state.feeds.forEach(function(f){s+=feedVal(l,f.id);});return s;}
 function lotTot(l,fid){return (l.b||0)*feedVal(l,fid);}
 function perPlace(l,fid){if(!l||!(l.b>0))return 0;var st=lotStats(l.id);if(st.P<=0)return 0;return l.b*feedVal(l,fid)/st.P;}
 function lotAt(i,k){
@@ -186,7 +193,7 @@ function tsRanges(){
 }
 function trieHtml(){
   var head='<div class="ph">🚜 Réglage des trémies<button class="closep" id="pCloseTrie">✕</button></div>';
-  if(!state.feeds.length)return head+'<div class="vv">Aucun aliment : ajoute-en dans le résumé.</div>';
+  if(!state.feeds.length)return head+'<div class="vv">Aucun aliment : ajoute-en depuis l’onglet 🏠.</div>';
   if(!state.feeds.some(function(f){return f.id===trieF;}))trieF=state.feeds[0].id;
   var chips='';state.feeds.forEach(function(f){chips+='<button class="chip'+(f.id===trieF?' on':'')+'" data-f="'+f.id+'" style="background:'+colFeed(f.id)+'1e">'+feedEmoji(f.name)+' '+esc(f.name)+'</button>';});
   var names=['Tapis double 1','Tapis double 2','Tapis double 3','Tapis simple'];
@@ -199,13 +206,13 @@ function trieHtml(){
       var same=r.b!=null&&r.b===r.a;
       var who=lotShort(lotById(r.a))+((r.b==null||same)?'':' + '+lotShort(lotById(r.b)));
       var dots='<span class="dot" style="background:'+lotCol(r.a)+'"></span>'+((r.b==null||same)?'':'<span class="dot" style="background:'+lotCol(r.b)+'"></span>');
-      return '<div class="trow">'+dots+'<span class="vv" style="flex:1">places <b>'+(r.k1+1)+'–'+r.k2+'</b> <span class="su">'+esc(who)+'</span></span><b>'+Math.round(r.dose*1000)+' g</b><span class="su">'+fmt(r.dose,2)+' kg</span></div>';
+      return '<div class="trow">'+dots+'<span class="vv" style="flex:1">places <b>'+(r.k1+1)+'–'+r.k2+'</b> <span class="su">'+esc(who)+'</span></span><b>'+Math.round(r.dose*1000)+' g/place</b></div>';
     }).join('');
-    cards+='<div class="fcard" style="background:#fff"><div class="fc-top"><span class="fc-name">'+names[t]+'</span><span class="su">'+fmt(tot,1)+' kg</span></div>'+(lines||'<div class="vv">rien à verser</div>')+'</div>';
+    cards+='<div class="fcard" style="background:#fff"><div class="fc-top"><span class="fc-name">'+names[t]+'</span><span class="su">total '+fmt(tot,1)+' kg</span></div>'+(lines||'<div class="vv">rien à verser</div>')+'</div>';
   }
   return head+'<div class="row">'+chips+'</div>'+cards+
     '<div class="tot">À verser au total <b>'+fmt(grand)+' kg</b></div>'+
-    '<div class="hint">Places numérotées de 1 (à gauche). Tapis double : 1 emplacement = 2 places face à face → on additionne les rations des 2 lots. La dose suit les g/brebis saisis par lot : en moyenne, chaque lot mange sa ration.</div>';
+    '<div class="hint">Places numérotées de 1 (à gauche). Sur un tapis double, la dose par place s’applique à l’emplacement : les 2 lots face à face sont additionnés. Le total versé = les rations g/j de toutes les brebis.</div>';
 }
 function feedEmoji(name){
   var n=(name||'').toLowerCase();
@@ -270,9 +277,11 @@ function renderMap(){
       if(sel&&sel.t==='seg'&&sel.i===i&&sel.j===sg.j)
         o.push('<rect x="'+left+'" y="'+(b.y-0.05)+'" width="'+(right-left)+'" height="'+(b.h+0.1)+'" fill="none" stroke="#3c7a4e" stroke-width="0.22"/>');
       var cx=(left+right)/2,w=right-left,lo=lotById(sg.lot);
-      if(w>=1.4){
+      if(w>=1.6){
         o.push('<text x="'+cx+'" y="'+(b.y+b.h/2-0.1)+'" font-size="0.75" font-weight="700" fill="#33402f" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="0.12" stroke-opacity="0.85">'+esc(lotShort(lo))+'</text>');
-        if(w>=3.2)o.push('<text x="'+cx+'" y="'+(b.y+b.h/2+0.85)+'" font-size="0.55" fill="#5a5248" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="0.1" stroke-opacity="0.85">'+sg.pl+' pl.</text>');
+        var bb=lo?(lo.b||0):0, gj=lo?Math.round(sumRations(lo)*1000):0;
+        var l2=bb>0?(bb+' 🐑'+(gj>0?' · '+gj+' g/j':'')):'';
+        if(l2&&w>=3.0)o.push('<text x="'+cx+'" y="'+(b.y+b.h/2+0.85)+'" font-size="0.55" fill="#5a5248" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="0.1" stroke-opacity="0.85">'+l2+'</text>');
       }
     });
   });
@@ -294,6 +303,30 @@ function renderMap(){
   svg.innerHTML=o.join('');
 }
 
+/* ============ onglets ============ */
+function renderTabs(){
+  var h='',homeOn=!sel&&!showTrie&&!(sel&&sel.t==='new');
+  h+='<button class="tab'+(homeOn?' on':'')+'" data-tab="home">🏠 Bergerie</button>';
+  state.lots.forEach(function(l){
+    var on=!showTrie&&sel&&((sel.t==='lot'&&sel.id===l.id)||(sel.t==='seg'&&state.airs[sel.i].lots[sel.j]===l.id));
+    h+='<button class="tab'+(on?' on':'')+'" data-tab="lot" data-id="'+l.id+'"><span class="dot" style="background:'+lotCol(l.id)+'"></span>'+esc(lotShort(l))+'</button>';
+  });
+  h+='<button class="tab'+(sel&&sel.t==='new'?' on':'')+'" data-tab="new">＋ Lot</button>';
+  h+='<button class="tab'+(showTrie?' on':'')+'" data-tab="trie">🚜 Trémies</button>';
+  $('tabs').innerHTML=h;
+  Array.prototype.forEach.call($('tabs').querySelectorAll('.tab'),function(b){
+    b.addEventListener('click',function(){
+      var t=b.getAttribute('data-tab');
+      notice='';editName=null;editFeed=null;
+      if(t==='home'){sel=null;showTrie=false;}
+      else if(t==='lot'){sel={t:'lot',id:+b.getAttribute('data-id')};showTrie=false;}
+      else if(t==='new'){sel={t:'new'};showTrie=false;}
+      else{showTrie=true;sel=null;}
+      renderMap();renderTabs();renderPanel();
+    });
+  });
+}
+
 /* ============ panneau ============ */
 function segsTxt(st){return st.segs.map(function(s){return 'Aire '+s.air+' (col. '+s.k1+'–'+s.k2+')';}).join(' · ')||'aucun morceau';}
 function chipsHtml(cur){
@@ -304,10 +337,18 @@ function chipsHtml(cur){
   h+='<button class="chip" data-lot="new">＋ Lot</button>';
   return h;
 }
+function noticeHtml(){return notice?'<div class="notice">'+esc(notice)+'</div>':'';}
 function lotSection(id,withClose){
   var l=lotById(id),st=lotStats(id);
   if(!l)return '';
   l.b=l.b||0;
+  var nameHtml;
+  if(editName===id){
+    nameHtml='<input id="editNameIn" value="'+esc(l.name||'')+'" placeholder="Nom du lot" style="flex:1;min-width:110px;text-align:left;font-weight:700">'+
+      '<button class="btnsm" id="btnNameOk">✓</button><button class="btnsm" id="btnNameNo">✕</button>';
+  }else{
+    nameHtml=esc(lotName(l))+'<button class="btnsm" id="btnRename">✏️</button><button class="btnsm'+(arm==='lot:'+id?' danger':'')+'" id="btnDelLot">'+(arm==='lot:'+id?'Confirmer ✗':'🗑')+'</button>';
+  }
   var cards='',max=0;
   state.feeds.forEach(function(f){max=Math.max(max,lotTot(l,f.id),feedVal(l,f.id));});
   state.feeds.forEach(function(f){
@@ -319,38 +360,48 @@ function lotSection(id,withClose){
       '<div class="fc-row"><input class="short" id="fg_'+f.id+'" inputmode="decimal" value="'+Math.round(r*1000)+'"><span class="vv">g/brebis</span><span class="vv">↔</span><input class="short" id="ft_'+f.id+'" inputmode="decimal" value="'+fmt(t,2)+'"><span class="vv">kg lot</span></div>'+
       '</div>';
   });
-  if(!state.feeds.length)cards='<div class="vv">Aucun aliment : ajoute-en dans le résumé.</div>';
+  if(!state.feeds.length)cards='<div class="vv">Aucun aliment : ajoute-en depuis l’onglet 🏠.</div>';
   var tot=(l.b||0)*sumRations(l),perAll=sumRations(l)*1000;
-  return '<div class="ph"><span class="dot" style="background:'+lotCol(id)+'"></span>'+esc(lotName(l))+
-      '<button class="btnsm" id="btnRename">✏️</button><button class="btnsm" id="btnDelLot">🗑</button>'+
+  return '<div class="ph"><span class="dot" style="background:'+lotCol(id)+'"></span>'+nameHtml+
       (withClose?'<button class="closep" id="pClose">✕</button>':'')+'</div>'+
     '<div class="row"><span class="lbl">Brebis</span><button class="step" data-step="-1">−</button><input id="inB" inputmode="numeric" value="'+l.b+'" style="width:70px"><button class="step" data-step="1">＋</button></div>'+
     '<div class="row"><span class="lbl">Morceaux</span><span class="vv">'+segsTxt(st)+'</span></div>'+
     '<div class="row"><span class="lbl">Places</span><span class="vv">T1 '+st.t[0]+' · T2 '+st.t[1]+' · T3 '+st.t[2]+' · TS '+st.t[3]+' → <b>'+st.P+' places</b></span></div>'+
     '<div class="sep"></div>'+
     cards+
-    '<div class="tot">Total du lot <b id="totKg">'+fmt(tot)+' kg</b><span class="su" id="totPer">'+((l.b||0)>0?'Σ ≈ '+Math.round(perAll)+' g/brebis':'saisis les brebis')+'</span></div>'+
+    '<div class="tot">Total du lot <b id="totKg">'+fmt(tot)+' kg</b><span class="su" id="totPer">'+((l.b||0)>0?'Σ ≈ '+Math.round(perAll)+' g/brebis/j':'saisis les brebis')+'</span></div>'+
     '<div class="row"><button class="act" id="btnApplyR">Appliquer ces rations à tous les lots</button></div>'+
-    '<div class="hint">Change g/brebis ou les kg du lot : tout se recalcule. Le bouton 🚜 te dit quoi verser sur chaque tapis, place par place.</div>';
+    '<div class="hint">Change g/brebis/j ou les kg du lot : tout se recalcule. L’onglet 🚜 dit quoi verser sur chaque tapis, place par place.</div>';
 }
 function feedsManagerHtml(){
   var h='<div class="ph">Aliments</div>';
   state.feeds.forEach(function(f){
-    h+='<div class="frow" style="display:flex;align-items:center;gap:6px;margin:6px 0">'+
-      '<button class="chip" data-rename="'+f.id+'" style="background:'+colFeed(f.id)+'1e">'+feedEmoji(f.name)+' '+esc(f.name)+'</button>'+
-      '<button class="btnsm" data-delf="'+f.id+'">🗑</button></div>';
+    if(editFeed===f.id){
+      h+='<div class="fc-row" style="margin:4px 0"><span class="dot" style="background:'+colFeed(f.id)+'"></span><input id="editFeedIn" value="'+esc(f.name)+'" style="flex:1;min-width:110px;text-align:left"><button class="btnsm" id="btnFeedOk">✓</button><button class="btnsm" id="btnFeedNo">✕</button></div>';
+    }else{
+      h+='<div class="fc-row" style="margin:4px 0"><button class="chip" data-renamef="'+f.id+'" style="background:'+colFeed(f.id)+'1e">'+feedEmoji(f.name)+' '+esc(f.name)+'</button>'+
+        '<button class="btnsm'+(arm==='feed:'+f.id?' danger':'')+'" data-delf="'+f.id+'">'+(arm==='feed:'+f.id?'Confirmer ✗':'🗑')+'</button></div>';
+    }
   });
-  h+='<div class="fc-row" style="margin:6px 0"><input id="newFeed" placeholder="nom" style="width:130px;text-align:left"><button class="chip" id="btnAddFeed">＋ Aliment</button></div>';
+  h+='<div class="fc-row" style="margin:6px 0"><input id="newFeed" placeholder="nom de l’aliment" style="width:150px;text-align:left"><button class="chip" id="btnAddFeed">＋ Aliment</button></div>';
   return h;
 }
+function createLot(name,i,j){
+  var id=state.nextLot++;
+  state.lots.push({id:id,b:0,r:{},name:(name||'').trim()||null});
+  if(i!=null&&j!=null&&state.airs[i])state.airs[i].lots[j]=id;
+  sel={t:'lot',id:id};notice='';
+  save();renderMap();renderTabs();renderPanel();
+}
 function renderPanel(){
+  renderTabs();
   var el=$('panel');
   if(showTrie){
-    el.innerHTML=trieHtml();
+    el.innerHTML=noticeHtml()+trieHtml();
     Array.prototype.forEach.call(el.querySelectorAll('.chip[data-f]'),function(c){
       c.addEventListener('click',function(){trieF=+c.getAttribute('data-f');renderPanel();});
     });
-    var ct=$('pCloseTrie');if(ct)ct.addEventListener('click',function(){showTrie=false;renderPanel();});
+    var ct=$('pCloseTrie');if(ct)ct.addEventListener('click',function(){showTrie=false;sel=null;renderTabs();renderPanel();});
     return;
   }
   if(!sel){
@@ -365,45 +416,56 @@ function renderPanel(){
       rows+='<div class="lrow" data-lot="'+l.id+'"><span class="dot" style="background:'+lotCol(l.id)+'"></span><span class="nm">'+esc(lotName(l))+'</span>'+
         '<span class="vv">'+((l.b||0)>0?l.b+' 🐑':'—')+'</span><span class="vv">'+st.P+' pl.</span>'+minis+'</div>';
     });
-    el.innerHTML='<div class="ph">Lots — '+state.lots.length+'</div><div class="lotsList">'+rows+'</div>'+
-      '<div class="row" style="margin:4px 0"><button class="act" id="btnNewLot">＋ Nouveau lot</button></div>'+
+    el.innerHTML=noticeHtml()+'<div class="ph">Lots — '+state.lots.length+'</div><div class="lotsList">'+rows+'</div>'+
       '<div class="row big" style="margin-top:2px">'+B+' 🐑 · '+P+' places · '+fmt(T)+' kg</div>'+
       '<div class="sep"></div>'+feedsManagerHtml()+
-      '<div class="hint">Touche un morceau d’aire pour choisir son lot et saisir les brebis. <b>Appui long dans une aire</b> = barrière. Touche une barrière pour la déplacer. Touche un aliment pour le renommer. 🚜 = quoi verser sur chaque tapis, place par place.</div>';
+      '<div class="hint">Touche un morceau d’aire dans le dessin pour l’attribuer à un lot. <b>Appui long dans une aire</b> = barrière. Touche une barrière pour la déplacer. Touche un aliment pour le renommer.</div>';
     Array.prototype.forEach.call(el.querySelectorAll('.lrow'),function(r){
-      r.addEventListener('click',function(){sel={t:'lot',id:+r.getAttribute('data-lot')};renderMap();renderPanel();});
+      r.addEventListener('click',function(){notice='';sel={t:'lot',id:+r.getAttribute('data-lot')};renderMap();renderTabs();renderPanel();});
     });
-    $('btnNewLot').addEventListener('click',function(){
-      var n=prompt('Nom du lot ? (ex. Agnelles — facultatif)','');
-      if(n===null)return;
-      state.lots.push({id:state.nextLot++,b:0,r:{},name:n.trim()||null});
-      save();renderPanel();
-    });
-    Array.prototype.forEach.call(el.querySelectorAll('[data-rename]'),function(c){
-      c.addEventListener('click',function(){
-        var f=null,id=+c.getAttribute('data-rename');
-        state.feeds.forEach(function(x){if(x.id===id)f=x;});
-        var n=prompt('Nouveau nom de l’aliment ?',f?f.name:'');
-        if(n&&n.trim()){f.name=n.trim();save();renderPanel();}
-      });
+    Array.prototype.forEach.call(el.querySelectorAll('[data-renamef]'),function(c){
+      c.addEventListener('click',function(){editFeed=+c.getAttribute('data-renamef');renderPanel();});
     });
     Array.prototype.forEach.call(el.querySelectorAll('[data-delf]'),function(c){
       c.addEventListener('click',function(){
-        var id=+c.getAttribute('data-delf'),f=null;
-        state.feeds.forEach(function(x){if(x.id===id)f=x;});
-        if(!confirm('Supprimer « '+(f?f.name:'')+' » ? Les rations de cet aliment seront effacées.'))return;
-        state.feeds=state.feeds.filter(function(x){return x.id!==id;});
-        state.lots.forEach(function(l){if(l.r)delete l.r[id];});
+        var id=+c.getAttribute('data-delf'),key='feed:'+id;
+        if(arm===key){
+          arm=null;
+          state.feeds=state.feeds.filter(function(x){return x.id!==id;});
+          state.lots.forEach(function(l){if(l.r)delete l.r[id];});
+          notice='Aliment supprimé.';
+        }else{
+          arm=key;
+          setTimeout(function(){if(arm===key){arm=null;if(!sel&&!showTrie)renderPanel();}},4000);
+        }
         save();renderPanel();
       });
     });
-    $('btnAddFeed').addEventListener('click',function(){
-      var n=$('newFeed').value.trim();
-      if(!n)n=prompt('Nom du nouvel aliment ?','');
-      if(!n)return;
-      state.feeds.push({id:state.nextFeed++,name:n.trim()});
+    var bok=$('btnFeedOk');
+    if(bok)bok.addEventListener('click',function(){
+      var f=null;state.feeds.forEach(function(x){if(x.id===editFeed)f=x;});
+      if(f){f.name=($('editFeedIn').value||'').trim()||f.name;}
+      editFeed=null;save();renderPanel();
+    });
+    var bno=$('btnFeedNo');
+    if(bno)bno.addEventListener('click',function(){editFeed=null;renderPanel();});
+    var baf=$('btnAddFeed');
+    if(baf)baf.addEventListener('click',function(){
+      var n=($('newFeed').value||'').trim();
+      if(!n){notice='Écris d’abord le nom de l’aliment.';renderPanel();return;}
+      state.feeds.push({id:state.nextFeed++,name:n});
+      $('newFeed').value='';
       save();renderPanel();
     });
+    return;
+  }
+  if(sel.t==='new'){
+    var ctx=(sel.i!=null&&sel.j!=null)?AIRES[sel.i].lab:null;
+    el.innerHTML=noticeHtml()+'<div class="ph">Nouveau lot<button class="closep" id="pClose">✕</button></div>'+
+      '<div class="row"><input id="newLotName" placeholder="Nom du lot (facultatif)" style="flex:1;min-width:130px;text-align:left"><button class="act" id="btnCreateLot">Créer</button></div>'+
+      (ctx?'<div class="vv">Sera attribué au morceau touché ('+esc(ctx)+').</div>':'<div class="hint">Crée le lot, puis touche des morceaux d’aires pour les lui attribuer.</div>');
+    $('pClose').addEventListener('click',function(){sel=null;renderTabs();renderPanel();});
+    $('btnCreateLot').addEventListener('click',function(){createLot($('newLotName').value,sel.i,sel.j);});
     return;
   }
   if(sel.t==='seg'){
@@ -412,10 +474,10 @@ function renderPanel(){
     var detail = i===1||i===2 ? n+' col. × 2 côtés = '+sg.pl+' places'
       : i===0 ? n+' places au tapis 1'
       : n+' + '+sg.ts+' (TS) = '+sg.pl+' places';
-    el.innerHTML='<div class="ph">'+AIRES[i].lab+' · col. '+k1+' à '+k2+'<button class="closep" id="pClose">✕</button></div>'+
+    el.innerHTML=noticeHtml()+'<div class="ph">'+AIRES[i].lab+' · col. '+k1+' à '+k2+'<button class="closep" id="pClose">✕</button></div>'+
       '<div class="vv" style="margin:2px 0 8px">Ce morceau : '+detail+' · <button class="act" id="btnCut" style="padding:5px 10px;font-size:13px">＋ Barrière au milieu</button></div>'+
       '<div class="row"><span class="lbl">Lot</span>'+chipsHtml(lid)+'</div><div class="sep"></div>'+lotSection(lid,false);
-    $('pClose').addEventListener('click',function(){sel=null;renderMap();renderPanel();});
+    $('pClose').addEventListener('click',function(){sel=null;renderMap();renderTabs();renderPanel();});
     $('btnCut').addEventListener('click',function(){addBarrier(i,j,Math.round((k1+k2)/2));});
     bindChips(i,j);
     bindLot(lid);
@@ -424,7 +486,7 @@ function renderPanel(){
   if(sel.t==='bar'){
     var bi=sel.i,bp=sel.p,k=state.airs[bi].barriers[bp];
     var leftL=lotById(state.airs[bi].lots[bp]),rightL=lotById(state.airs[bi].lots[bp+1]);
-    el.innerHTML='<div class="ph">Barrière — '+AIRES[bi].lab+', colonne '+k+'<button class="closep" id="pClose">✕</button></div>'+
+    el.innerHTML=noticeHtml()+'<div class="ph">Barrière — '+AIRES[bi].lab+', colonne '+k+'<button class="closep" id="pClose">✕</button></div>'+
       '<div class="row"><button class="act" data-a="bm">◀ 1 place</button><button class="act" data-a="bp">1 place ▶</button><button class="warn" data-a="bd">Supprimer</button></div>'+
       '<div class="vv" style="margin:4px 0">Gauche : '+esc(lotShort(leftL))+' · Droite : '+esc(lotShort(rightL))+'</div>'+
       '<div class="hint">Tu peux aussi la glisser directement dans le dessin. 1 place ≈ 33 cm.</div>';
@@ -436,27 +498,22 @@ function renderPanel(){
         else delBarrier(bi,bp);
       });
     });
-    $('pClose').addEventListener('click',function(){sel=null;renderMap();renderPanel();});
+    $('pClose').addEventListener('click',function(){sel=null;renderMap();renderTabs();renderPanel();});
     return;
   }
-  el.innerHTML=lotSection(sel.id,true);
-  $('pClose').addEventListener('click',function(){sel=null;renderMap();renderPanel();});
+  if(!lotById(sel.id)){sel=null;renderTabs();renderPanel();return;}
+  el.innerHTML=noticeHtml()+lotSection(sel.id,true);
+  $('pClose').addEventListener('click',function(){sel=null;renderMap();renderTabs();renderPanel();});
   bindLot(sel.id);
 }
 function bindChips(i,j){
   Array.prototype.forEach.call($('panel').querySelectorAll('.chip[data-lot]'),function(c){
     c.addEventListener('click',function(){
       var v=c.getAttribute('data-lot');
-      if(v==='new'){
-        var nm=prompt('Nom du nouveau lot ? (facultatif)','');
-        if(nm===null)return;
-        var cur=lotById(state.airs[i].lots[j]);
-        var id=state.nextLot++;
-        state.lots.push({id:id,b:0,r:cur?JSON.parse(JSON.stringify(cur.r||{})):{},name:nm.trim()||null});
-        state.airs[i].lots[j]=id;
-      } else state.airs[i].lots[j]=+v;
-      save();
-      renderMap();renderPanel();
+      notice='';
+      if(v==='new'){sel={t:'new',i:i,j:j};}
+      else state.airs[i].lots[j]=+v;
+      save();renderMap();renderTabs();renderPanel();
     });
   });
 }
@@ -478,10 +535,10 @@ function bindLot(id){
     });
     var tot=(l.b||0)*sumRations(l);
     if($('totKg'))$('totKg').textContent=fmt(tot)+' kg';
-    if($('totPer'))$('totPer').textContent=l.b>0?'Σ ≈ '+Math.round(sumRations(l)*1000)+' g/brebis':'saisis les brebis';
+    if($('totPer'))$('totPer').textContent=l.b>0?'Σ ≈ '+Math.round(sumRations(l)*1000)+' g/brebis/j':'saisis les brebis';
     renderMap();save();
   }
-  inB.addEventListener('input',function(){l.b=Math.max(0,Math.round(pnum(inB.value)));refresh();});
+  if(inB)inB.addEventListener('input',function(){l.b=Math.max(0,Math.round(pnum(inB.value)));refresh();});
   state.feeds.forEach(function(f){
     var fg=$('fg_'+f.id),ft=$('ft_'+f.id);
     if(!fg)return;
@@ -497,19 +554,29 @@ function bindLot(id){
     save();renderPanel();
   });
   var br=$('btnRename');
-  if(br)br.addEventListener('click',function(){
-    var n=prompt('Nom du lot ?',l.name||'');
-    if(n===null)return;
-    l.name=n.trim()||null;save();renderMap();renderPanel();
+  if(br)br.addEventListener('click',function(){editName=id;renderPanel();});
+  var bok=$('btnNameOk');
+  if(bok)bok.addEventListener('click',function(){
+    l.name=($('editNameIn').value||'').trim()||null;
+    editName=null;save();renderMap();renderTabs();renderPanel();
   });
+  var bno=$('btnNameNo');
+  if(bno)bno.addEventListener('click',function(){editName=null;renderPanel();});
   var bd=$('btnDelLot');
   if(bd)bd.addEventListener('click',function(){
     var stt=lotStats(id);
-    if(stt.segs.length){alert('Ce lot a encore '+stt.segs.length+' morceau(x) : attribue-les à un autre lot avant de le supprimer.');return;}
-    if(!confirm('Supprimer « '+lotName(l)+' » ?'))return;
-    state.lots=state.lots.filter(function(x){return x.id!==id;});
-    if(!state.lots.length)state.lots=[{id:state.nextLot++,b:0,r:{}}];
-    sel=null;save();renderMap();renderPanel();
+    if(stt.segs.length){notice='Ce lot a encore '+stt.segs.length+' morceau(x) : attribue-les à un autre lot avant de le supprimer.';renderPanel();return;}
+    if(arm==='lot:'+id){
+      arm=null;
+      state.lots=state.lots.filter(function(x){return x.id!==id;});
+      if(!state.lots.length)state.lots=[{id:state.nextLot++,b:0,r:{}}];
+      sel=null;notice='Lot supprimé.';
+      save();renderMap();renderTabs();renderPanel();
+    }else{
+      arm='lot:'+id;
+      setTimeout(function(){if(arm==='lot:'+id){arm=null;renderPanel();}},4000);
+      renderPanel();
+    }
   });
 }
 
@@ -527,13 +594,13 @@ function insertBarrier(i,k){
 function addBarrier(i,j,k){
   var a=state.airs[i];
   var lo=j===0?1:a.barriers[j-1]+1, hi=j===a.barriers.length?DBL_PL-1:a.barriers[j]-1;
-  if(lo>hi){alert('Plus de place dans ce morceau.');return;}
+  if(lo>hi){notice='Plus de place dans ce morceau.';renderPanel();return;}
   k=Math.max(lo,Math.min(hi,k));
   a.barriers.splice(j,0,k);
   a.lots.splice(j+1,0,a.lots[j]);
   save();
   sel={t:'bar',i:i,p:j};
-  renderMap();renderPanel();
+  renderMap();renderTabs();renderPanel();
 }
 function moveBarrier(i,p,k){
   var a=state.airs[i];
@@ -553,7 +620,7 @@ function delBarrier(i,p){
   var a=state.airs[i];
   a.barriers.splice(p,1);
   a.lots.splice(p,2,a.lots[p]);
-  sel=null;save();renderMap();renderPanel();
+  sel=null;save();renderMap();renderTabs();renderPanel();
 }
 function kFromX(x){return Math.max(1,Math.min(DBL_PL-1,Math.round((x-DBL_X0)/DBL_LEN*DBL_PL)));}
 
@@ -657,7 +724,8 @@ function endPtr(e){
         var sg=segAt(p);
         sel=sg?{t:'seg',i:sg.i,j:sg.j}:null;
       }
-      renderMap();renderPanel();
+      notice='';arm=null;
+      renderMap();renderTabs();renderPanel();
     }
     gest.mode=null;gest.bar=null;gest.pinch=null;gest.longOk=false;
   }
@@ -667,11 +735,15 @@ svg.addEventListener('pointercancel',endPtr);
 svg.addEventListener('wheel',function(e){e.preventDefault();zoomAt(e.clientX,e.clientY,e.deltaY>0?1.15:0.87);},{passive:false});
 
 /* ============ boutons ============ */
-$('btnTrie').addEventListener('click',function(){showTrie=!showTrie;renderPanel();});
 $('btnReset').addEventListener('click',function(){
-  if(confirm('Tout remettre à zéro ? (barrières, lots, brebis, rations)')){
-    state=defaultState();sel=null;save();renderMap();renderPanel();
+  if(arm==='reset'){
+    arm=null;$('btnReset').textContent='⟲';
+    state=defaultState();sel=null;showTrie=false;notice='';trieF=null;
+    save();renderMap();renderTabs();renderPanel();
+    return;
   }
+  arm='reset';$('btnReset').textContent='⚠️';
+  setTimeout(function(){if(arm==='reset'){arm=null;var b=$('btnReset');if(b)b.textContent='⟲';}},4000);
 });
 $('zin').addEventListener('click',function(){var r=svg.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,0.8);});
 $('zout').addEventListener('click',function(){var r=svg.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,1.25);});
@@ -684,7 +756,7 @@ window.addEventListener('resize',function(){
 });
 
 /* ============ départ ============ */
-fitView();renderMap();renderPanel();
+fitView();renderMap();renderTabs();renderPanel();
 </script>
 </body>
 </html>
