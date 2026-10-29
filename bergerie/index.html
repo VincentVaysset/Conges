@@ -269,10 +269,7 @@ function trieHtml(){
         if(same){split='<span class="su">2 × '+pa+' g</span>';}
         else if(r.b!=null){
           var pb=Math.round(perPlace(lotById(r.b),f.id)*1000);
-          var parts=[];
-          if(pa>0.5)parts.push(esc(lotShort(lotById(r.a)))+' '+pa);
-          if(pb>0.5)parts.push(esc(lotShort(lotById(r.b)))+' '+pb);
-          if(parts.length)split='<span class="su">'+parts.join(' + ')+' g</span>';
+          split='<span class="su">2 × '+Math.round((pa+pb)/2)+' g</span>';
         }
         if(compact)return '<div class="trow">'+dots+'<span class="vv" style="flex:1">places <b>'+(r.k1+1)+'–'+r.k2+'</b> <span class="su">'+esc(who)+'</span> '+nm+'</span>'+split+'<b>'+Math.round(r.doses[f.id]*1000)+' g/place</b></div>';
         return '<div class="trow" style="padding-left:22px"><span class="vv" style="flex:1">'+nm+'</span>'+split+'<b>'+Math.round(r.doses[f.id]*1000)+' g/place</b></div>';
@@ -300,7 +297,7 @@ function trieHtml(){
   return head+cards+
     '<div class="tot">À verser au total <b>'+fmt(grand)+' kg</b></div>'+
     ((ctrl)?'<div class="ph">'+ic('check',14)+' Contrôle par lot</div>'+ctrl:'')+
-    '<div class="hint">Places numérotées depuis la gauche. La trémie verse au milieu du tapis : une seule ration pour les 2 rangées — « 2 × » la part du lot quand il est seul, somme des parts des 2 lots quand ils se partagent le tapis. Contrôle par lot : total versé ÷ effectif = sa ration g/j.</div>';
+    '<div class="hint">Places numérotées depuis la gauche. La trémie verse au milieu du tapis : une seule ration pour les 2 rangées — « 2 × » la dose par rangée, impossible à séparer entre 2 lots. Contrôle par lot : total versé ÷ effectif = sa ration g/j.</div>';
 }
 function fmt(n,d){if(d==null)d=2;return (+(n.toFixed(d))).toFixed(d).replace('.',',');}
 function pnum(v){var x=parseFloat(String(v).replace(',','.'));return isNaN(x)?0:x;}
