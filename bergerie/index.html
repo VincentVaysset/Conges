@@ -20,7 +20,7 @@
   #map{width:100%;height:100%;display:block;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   .zooms{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px}
   .zooms button{width:38px;height:38px;background:#fff;border:1px solid #c9c2b6;color:var(--encre);font-size:17px;display:flex;align-items:center;justify-content:center;padding:0}
-  #panel{background:#fff;border-top:1px solid #ddd6c8;padding:10px 12px 14px;max-height:48dvh;overflow:auto;flex-shrink:0}
+  #panel{background:#fff;border-top:1px solid #ddd6c8;padding:10px 12px 14px;max-height:50dvh;overflow:auto;flex-shrink:0}
   .ph{font-weight:700;color:var(--vert);display:flex;align-items:center;gap:8px;margin:2px 0 4px;flex-wrap:wrap}
   .dot{width:14px;height:14px;border-radius:5px;display:inline-block;flex-shrink:0}
   .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0}
@@ -31,17 +31,26 @@
   button.act{background:var(--vert);color:#fff}
   button.warn{background:var(--danger);color:#fff}
   .closep{margin-left:auto;background:#efe9dc;color:#5a5248;padding:4px 10px;border-radius:8px}
+  .btnsm{background:#efe9dc;color:#5a5248;padding:4px 8px;border-radius:8px;font-size:14px}
   input{font:inherit;border:1px solid #c9c2b6;border-radius:9px;padding:9px 8px;background:#fff;color:var(--encre);font-size:16px;text-align:center}
-  input.short{width:74px}
+  input.short{width:76px}
   .hint{font-size:13px;color:#7a7267;margin-top:8px;line-height:1.45}
   .sep{border-top:1px solid #eee7d8;margin:10px 0}
   .chip{border-radius:999px;padding:7px 13px;border:2px solid transparent;font-weight:600;background:#efe9dc;color:var(--encre)}
   .chip.on{border-color:#2f2a26}
-  .frow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:6px 0}
-  .fname{font-weight:600;min-width:72px;font-size:14px}
-  .lotsList .lrow{display:flex;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px solid #eee7d8;cursor:pointer}
+  .fcard{border-radius:12px;padding:8px 10px;margin:8px 0}
+  .fc-top{display:flex;align-items:center;gap:6px}
+  .fc-emoji{font-size:18px}
+  .fc-name{font-weight:700;flex:1}
+  .fc-bar{height:9px;border-radius:5px;background:#eee7d8;margin:6px 0 4px;overflow:hidden}
+  .fc-fill{height:100%;border-radius:5px}
+  .fc-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .tot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0;font-size:15px}
+  .tot b{font-size:18px}
+  .mini{font-size:12px;border-radius:8px;padding:2px 7px;margin:1px;display:inline-block}
+  .lotsList .lrow{display:flex;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px solid #eee7d8;cursor:pointer;flex-wrap:wrap}
   .lotsList .lrow:active{background:#f6f1e6}
-  .lrow .nm{font-weight:700;flex:1}
+  .lrow .nm{font-weight:700}
   .su{font-size:12px;color:#9a9184;border:1px solid #d8d1c3;border-radius:6px;padding:2px 6px;margin-left:2px}
 </style>
 </head>
@@ -65,32 +74,33 @@
 'use strict';
 /* ============ BERGERIE — valeurs ajustables ============
    35 m × 22 m — 3 places au mètre
-   Tapis doubles : 92 places/côté (~30,67 m, alignés à gauche, plus courts à droite)
-   Tapis simple : 102 places (34 m, dépasse à droite)
+   Aires : toute la longueur (35 m). Seuls les tapis sont plus courts :
+   Tapis doubles : 92 places/côté (~30,67 m) — Tapis simple : 102 places (34 m)
    Bandes : Aire 1 / Tapis 1 / Aire 2 / Tapis 2 / Aire 3 / Tapis 3 / Aire 4 / Tapis simple / couloir */
 var L=35, W=22, PL_M=3, DBL_PL=92, TS_PL=102;
 var DBL_X0=0, DBL_LEN=DBL_PL/PL_M, DBL_END=DBL_X0+DBL_LEN;   /* doubles : 0 → 30,67 m */
 var TS_X0=0, TS_LEN=TS_PL/PL_M, TS_END=TS_X0+TS_LEN;         /* simple : 0 → 34 m */
 var AIRES=[
-  {y:0.0,  h:4.3,x0:DBL_X0,x1:DBL_END,lab:'Aire 1'},
-  {y:5.0,  h:4.3,x0:DBL_X0,x1:DBL_END,lab:'Aire 2'},
-  {y:10.0, h:4.3,x0:DBL_X0,x1:DBL_END,lab:'Aire 3'},
-  {y:15.0, h:4.3,x0:TS_X0, x1:TS_END, lab:'Aire 4'}
+  {y:0.0,  h:4.3,lab:'Aire 1'},
+  {y:5.0,  h:4.3,lab:'Aire 2'},
+  {y:10.0, h:4.3,lab:'Aire 3'},
+  {y:15.0, h:4.3,lab:'Aire 4'}
 ];
 var TAPIS=[
-  {y:4.3,  h:0.7,x0:DBL_X0,x1:DBL_END,lab:'Tapis double 1'},
-  {y:9.3,  h:0.7,x0:DBL_X0,x1:DBL_END,lab:'Tapis double 2'},
-  {y:14.3, h:0.7,x0:DBL_X0,x1:DBL_END,lab:'Tapis double 3'},
-  {y:19.3, h:0.7,x0:TS_X0, x1:TS_END, lab:'Tapis simple'}
+  {y:4.3,  h:0.7,x1:DBL_END,lab:'Tapis double 1'},
+  {y:9.3,  h:0.7,x1:DBL_END,lab:'Tapis double 2'},
+  {y:14.3, h:0.7,x1:DBL_END,lab:'Tapis double 3'},
+  {y:19.3, h:0.7,x1:TS_END, lab:'Tapis simple'}
 ];
 var LOT_COLS=['#a8d5b0','#f5cfa0','#a9cbe8','#f2b8cf','#e8e0a0','#c9b8e8','#9fd9c8','#f0b9a0'];
+var FEED_COLS=['#6a994e','#d9a441','#7b6cbf','#4d8fd1','#c96a5b','#3ba99c','#b5853f','#8a8f5a'];
 
 /* ============ état ============ */
 var KEY='bergerie_lots_v3';
 function defaultState(){
   return {nextLot:1,nextFeed:1,
     feeds:[{id:0,name:'Aliment'}],
-    lots:[{id:0,b:0,rt:{'0':0}}],
+    lots:[{id:0,b:0,rt:{'0':0},name:null}],
     airs:[0,1,2,3].map(function(){return {barriers:[],lots:[0]};})};
 }
 function loadS(){try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&s.lots&&s.airs&&s.feeds)return s;}catch(e){}return null;}
@@ -115,6 +125,9 @@ function segsOf(i){
 }
 function lotById(id){for(var x=0;x<state.lots.length;x++)if(state.lots[x].id===id)return state.lots[x];return null;}
 function lotCol(id){return LOT_COLS[id%LOT_COLS.length];}
+function colFeed(id){return FEED_COLS[id%FEED_COLS.length];}
+function lotName(l){return l&&l.name?l.name:'Lot '+(l.id+1);}
+function lotShort(l){return l&&l.name?l.name.slice(0,14):'L'+(l.id+1);}
 function lotStats(id){
   var t=[0,0,0,0],segs=[];
   for(var i=0;i<4;i++)segsOf(i).forEach(function(sg){
@@ -128,11 +141,16 @@ function lotStats(id){
 function feedVal(l,fid){return (l.rt&&l.rt[fid])||0;}
 function setFeedVal(l,fid,v){l.rt=l.rt||{};l.rt[fid]=v;}
 function sumRations(l){var s=0;state.feeds.forEach(function(f){s+=feedVal(l,f.id);});return s;}
-function cleanupLots(){
-  var used={};
-  state.airs.forEach(function(a){a.lots.forEach(function(x){used[x]=1;});});
-  state.lots=state.lots.filter(function(l){return used[l.id];});
-  if(!state.lots.length)state.lots=[{id:state.nextLot++,b:0,rt:{}}];
+function feedEmoji(name){
+  var n=(name||'').toLowerCase();
+  if(/blé|blé |orge|avoine|tritic|céré|cereal/.test(n))return '🌾';
+  if(/maïs|mais|corn/.test(n))return '🌽';
+  if(/tourteau|soja|colza|pois|féverole|feverole/.test(n))return '🫘';
+  if(/foin|luzerne|herbe|fourr|paille/.test(n))return '🌿';
+  if(/pulpe|betterave/.test(n))return '🍠';
+  if(/lait/.test(n))return '🥛';
+  if(/minéral|mineral|sel|vitamine|vita/.test(n))return '🧂';
+  return '🌰';
 }
 function fmt(n,d){if(d==null)d=2;return (+(n.toFixed(d))).toFixed(d).replace('.',',');}
 function pnum(v){var x=parseFloat(String(v).replace(',','.'));return isNaN(x)?0:x;}
@@ -169,35 +187,34 @@ function zoomAt(cx,cy,f){
 function renderMap(){
   var o=[];
   o.push('<rect x="0" y="0" width="'+L+'" height="'+W+'" fill="#f0ead9"/>');
-  o.push('<rect x="'+DBL_END+'" y="0" width="'+(L-DBL_END)+'" height="15" fill="#e8e2d4"/>');
-  o.push('<rect x="'+TS_END+'" y="15" width="'+(L-TS_END)+'" height="5" fill="#e8e2d4"/>');
   o.push('<rect x="0" y="20" width="'+L+'" height="2" fill="#e7efe4" stroke="#b9cdb6" stroke-width="0.06"/>');
   o.push('<text x="'+(L/2)+'" y="21.2" font-size="0.85" fill="#6f8a6b" text-anchor="middle">Couloir d’alimentation</text>');
-  TAPIS.forEach(function(b){
-    o.push('<rect x="'+b.x0+'" y="'+b.y+'" width="'+(b.x1-b.x0)+'" height="'+b.h+'" fill="#d7e5d2" stroke="#cfc7b8" stroke-width="0.05"/>');
-  });
   AIRES.forEach(function(b){
-    o.push('<rect x="'+b.x0+'" y="'+b.y+'" width="'+(b.x1-b.x0)+'" height="'+b.h+'" fill="#f6efdd" stroke="#cfc7b8" stroke-width="0.05"/>');
+    o.push('<rect x="0" y="'+b.y+'" width="'+L+'" height="'+b.h+'" fill="#f6efdd" stroke="#cfc7b8" stroke-width="0.05"/>');
+  });
+  TAPIS.forEach(function(b){
+    o.push('<rect x="0" y="'+b.y+'" width="'+L+'" height="'+b.h+'" fill="#e6ddca"/>');
+    o.push('<rect x="0" y="'+b.y+'" width="'+b.x1+'" height="'+b.h+'" fill="#d7e5d2" stroke="#cfc7b8" stroke-width="0.05"/>');
   });
   AIRES.forEach(function(b,i){
     segsOf(i).forEach(function(sg){
-      var left=xOfK(sg.k1), right=(i===3&&sg.isLast)?b.x1:xOfK(sg.k2);
+      var left=xOfK(sg.k1), right=sg.isLast?L:xOfK(sg.k2);
       if(right-left<=0)return;
       o.push('<rect x="'+left+'" y="'+b.y+'" width="'+(right-left)+'" height="'+b.h+'" fill="'+lotCol(sg.lot)+'" opacity="0.55"/>');
       if(sel&&sel.t==='seg'&&sel.i===i&&sel.j===sg.j)
         o.push('<rect x="'+left+'" y="'+(b.y-0.05)+'" width="'+(right-left)+'" height="'+(b.h+0.1)+'" fill="none" stroke="#3c7a4e" stroke-width="0.22"/>');
-      var cx=(left+right)/2,w=right-left;
+      var cx=(left+right)/2,w=right-left,lo=lotById(sg.lot);
       if(w>=1.4){
-        o.push('<text x="'+cx+'" y="'+(b.y+b.h/2-0.1)+'" font-size="0.75" font-weight="700" fill="#33402f" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="0.12" stroke-opacity="0.85">L'+(sg.lot+1)+'</text>');
+        o.push('<text x="'+cx+'" y="'+(b.y+b.h/2-0.1)+'" font-size="0.75" font-weight="700" fill="#33402f" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="0.12" stroke-opacity="0.85">'+esc(lotShort(lo))+'</text>');
         if(w>=3.2)o.push('<text x="'+cx+'" y="'+(b.y+b.h/2+0.85)+'" font-size="0.55" fill="#5a5248" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="0.1" stroke-opacity="0.85">'+sg.pl+' pl.</text>');
       }
     });
   });
   AIRES.forEach(function(b){
-    o.push('<text x="'+(b.x0+0.45)+'" y="'+(b.y+0.85)+'" font-size="0.75" fill="#9a8f7c" paint-order="stroke" stroke="#ffffff" stroke-width="0.1" stroke-opacity="0.75">'+b.lab+'</text>');
+    o.push('<text x="0.45" y="'+(b.y+0.85)+'" font-size="0.75" fill="#9a8f7c" paint-order="stroke" stroke="#ffffff" stroke-width="0.1" stroke-opacity="0.75">'+b.lab+'</text>');
   });
   TAPIS.forEach(function(b){
-    o.push('<text x="'+(b.x0+0.4)+'" y="'+(b.y+b.h/2+0.18)+'" font-size="0.5" fill="#4f6b4a" paint-order="stroke" stroke="#ffffff" stroke-width="0.1" stroke-opacity="0.75">'+b.lab+'</text>');
+    o.push('<text x="0.4" y="'+(b.y+b.h/2+0.18)+'" font-size="0.5" fill="#4f6b4a" paint-order="stroke" stroke="#ffffff" stroke-width="0.1" stroke-opacity="0.75">'+b.lab+'</text>');
   });
   AIRES.forEach(function(b,i){
     state.airs[i].barriers.forEach(function(k,p){
@@ -216,7 +233,7 @@ function segsTxt(st){return st.segs.map(function(s){return 'Aire '+s.air+' (col.
 function chipsHtml(cur){
   var h='';
   state.lots.forEach(function(l){
-    h+='<button class="chip'+(l.id===cur?' on':'')+'" data-lot="'+l.id+'" style="background:'+lotCol(l.id)+'">L'+(l.id+1)+'</button>';
+    h+='<button class="chip'+(l.id===cur?' on':'')+'" data-lot="'+l.id+'" style="background:'+lotCol(l.id)+'">'+esc(lotShort(l))+'</button>';
   });
   h+='<button class="chip" data-lot="new">＋ Lot</button>';
   return h;
@@ -225,32 +242,39 @@ function lotSection(id,withClose){
   var l=lotById(id),st=lotStats(id);
   if(!l)return '';
   l.b=l.b||0;
-  var feedsHtml='',totKg=st.P*sumRations(l),perAll=l.b>0?totKg/l.b:null;
+  var cards='',max=0;
+  state.feeds.forEach(function(f){max=Math.max(max,st.P*feedVal(l,f.id));});
   state.feeds.forEach(function(f){
-    var r=feedVal(l,f.id);
-    feedsHtml+='<div class="frow"><span class="fname">'+esc(f.name)+'</span>'+
-      '<input class="short" id="fr_'+f.id+'" inputmode="decimal" value="'+fmt(r,3)+'"><span class="vv">kg/pl</span>'+
-      '<input class="short" id="ft_'+f.id+'" inputmode="decimal" value="'+fmt(st.P*r,2)+'"><span class="vv">kg</span>'+
-      '<span class="su" id="fp_'+f.id+'">'+(l.b>0?Math.round(st.P*r/l.b*1000)+' g/brebis':'—')+'</span></div>';
+    var r=feedVal(l,f.id),t=st.P*r,per=l.b>0?t/l.b:null;
+    var w=max>0?Math.max(2,Math.round(t/max*100)):0;
+    cards+='<div class="fcard" style="background:'+colFeed(f.id)+'1e">'+
+      '<div class="fc-top"><span class="fc-emoji">'+feedEmoji(f.name)+'</span><span class="fc-name">'+esc(f.name)+'</span><span class="su" id="fp_'+f.id+'">'+(per==null?'—':Math.round(per*1000)+' g/brebis')+'</span></div>'+
+      '<div class="fc-bar"><div class="fc-fill" id="fbar_'+f.id+'" style="background:'+colFeed(f.id)+';width:'+w+'%"></div></div>'+
+      '<div class="fc-row"><input class="short" id="fr_'+f.id+'" inputmode="decimal" value="'+fmt(r,3)+'"><span class="vv">kg/pl</span><span class="vv">↔</span><input class="short" id="ft_'+f.id+'" inputmode="decimal" value="'+fmt(t,2)+'"><span class="vv">kg</span></div>'+
+      '</div>';
   });
-  if(!state.feeds.length)feedsHtml='<div class="vv">Aucun aliment : ajoute-en dans le résumé.</div>';
-  return '<div class="ph"><span class="dot" style="background:'+lotCol(id)+'"></span>Lot '+(id+1)+
+  if(!state.feeds.length)cards='<div class="vv">Aucun aliment : ajoute-en dans le résumé.</div>';
+  var tot=st.P*sumRations(l),perAll=l.b>0?tot/l.b:null;
+  return '<div class="ph"><span class="dot" style="background:'+lotCol(id)+'"></span>'+esc(lotName(l))+
+      '<button class="btnsm" id="btnRename">✏️</button><button class="btnsm" id="btnDelLot">🗑</button>'+
       (withClose?'<button class="closep" id="pClose">✕</button>':'')+'</div>'+
     '<div class="row"><span class="lbl">Brebis</span><button class="step" data-step="-1">−</button><input id="inB" inputmode="numeric" value="'+l.b+'" style="width:70px"><button class="step" data-step="1">＋</button></div>'+
     '<div class="row"><span class="lbl">Morceaux</span><span class="vv">'+segsTxt(st)+'</span></div>'+
     '<div class="row"><span class="lbl">Places</span><span class="vv">T1 '+st.t[0]+' · T2 '+st.t[1]+' · T3 '+st.t[2]+' · TS '+st.t[3]+' → <b>'+st.P+' places</b></span></div>'+
-    '<div class="sep"></div><div class="row" style="margin:0"><span class="lbl">Aliments</span><span class="vv">(kg/place ↔ kg pour le lot)</span></div>'+
-    feedsHtml+
-    '<div class="row"><span class="lbl">Total</span><span class="vv big">'+fmt(totKg)+' kg</span><span class="su">'+(perAll==null?'saisis les brebis':Math.round(perAll*1000)+' g/brebis')+'</span></div>'+
-    '<button class="act" id="btnApplyR">Appliquer ces rations à tous les lots</button>'+
-    '<div class="hint">Modifie soit kg/place, soit les kg du lot : l’autre se recalcule (idem par brebis).</div>';
+    '<div class="sep"></div>'+
+    cards+
+    '<div class="tot">Total du lot <b id="totKg">'+fmt(tot)+' kg</b><span class="su" id="totPer">'+(perAll==null?'saisis les brebis':'≈ '+Math.round(perAll*1000)+' g / brebis')+'</span></div>'+
+    '<div class="row"><button class="act" id="btnApplyR">Appliquer ces rations à tous les lots</button></div>'+
+    '<div class="hint">Change kg/place ou les kg du lot : tout se recalcule (barres et g/brebis).</div>';
 }
 function feedsManagerHtml(){
   var h='<div class="ph">Aliments</div>';
   state.feeds.forEach(function(f){
-    h+='<div class="frow"><button class="chip" data-rename="'+f.id+'">'+esc(f.name)+'</button><button class="closep" data-delf="'+f.id+'">✕</button></div>';
+    h+='<div class="frow" style="display:flex;align-items:center;gap:6px;margin:6px 0">'+
+      '<button class="chip" data-rename="'+f.id+'" style="background:'+colFeed(f.id)+'1e">'+feedEmoji(f.name)+' '+esc(f.name)+'</button>'+
+      '<button class="btnsm" data-delf="'+f.id+'">🗑</button></div>';
   });
-  h+='<div class="frow"><input id="newFeed" placeholder="nom" style="width:120px;text-align:left"><button class="chip" id="btnAddFeed">＋ Aliment</button></div>';
+  h+='<div class="fc-row" style="margin:6px 0"><input id="newFeed" placeholder="nom" style="width:130px;text-align:left"><button class="chip" id="btnAddFeed">＋ Aliment</button></div>';
   return h;
 }
 function renderPanel(){
@@ -259,14 +283,27 @@ function renderPanel(){
     var rows='',B=0,T=0,P=0;
     state.lots.forEach(function(l){
       var st=lotStats(l.id);B+=l.b||0;P+=st.P;T+=st.P*sumRations(l);
-      rows+='<div class="lrow" data-lot="'+l.id+'"><span class="dot" style="background:'+lotCol(l.id)+'"></span><span class="nm">Lot '+(l.id+1)+'</span><span class="vv">'+st.segs.length+' morc.</span><span class="vv">'+((l.b||0)>0?l.b+' 🐑':'—')+'</span><span class="vv">'+st.P+' pl.</span><span class="vv">'+fmt(st.P*sumRations(l))+' kg</span></div>';
+      var minis='';
+      state.feeds.forEach(function(f){
+        var t=st.P*feedVal(l,f.id);
+        if(t>0)minis+='<span class="mini" style="background:'+colFeed(f.id)+'1e">'+feedEmoji(f.name)+' '+fmt(t,1)+' kg</span>';
+      });
+      rows+='<div class="lrow" data-lot="'+l.id+'"><span class="dot" style="background:'+lotCol(l.id)+'"></span><span class="nm">'+esc(lotName(l))+'</span>'+
+        '<span class="vv">'+((l.b||0)>0?l.b+' 🐑':'—')+'</span><span class="vv">'+st.P+' pl.</span>'+minis+'</div>';
     });
     el.innerHTML='<div class="ph">Lots — '+state.lots.length+'</div><div class="lotsList">'+rows+'</div>'+
-      '<div class="row big" style="margin-top:6px">'+B+' 🐑 · '+P+' places · '+fmt(T)+' kg</div>'+
+      '<div class="row" style="margin:4px 0"><button class="act" id="btnNewLot">＋ Nouveau lot</button></div>'+
+      '<div class="row big" style="margin-top:2px">'+B+' 🐑 · '+P+' places · '+fmt(T)+' kg</div>'+
       '<div class="sep"></div>'+feedsManagerHtml()+
-      '<div class="hint">Touche un morceau d’aire pour choisir son lot et saisir les brebis. <b>Appui long dans une aire</b> = couper avec une barrière. Touche une barrière pour la déplacer. Touche un aliment pour le renommer.</div>';
+      '<div class="hint">Touche un morceau d’aire pour choisir son lot et saisir les brebis. <b>Appui long dans une aire</b> = barrière. Touche une barrière pour la déplacer. Touche un aliment pour le renommer.</div>';
     Array.prototype.forEach.call(el.querySelectorAll('.lrow'),function(r){
       r.addEventListener('click',function(){sel={t:'lot',id:+r.getAttribute('data-lot')};renderMap();renderPanel();});
+    });
+    $('btnNewLot').addEventListener('click',function(){
+      var n=prompt('Nom du lot ? (ex. Agnelles — facultatif)','');
+      if(n===null)return;
+      state.lots.push({id:state.nextLot++,b:0,rt:{},name:n.trim()||null});
+      save();renderPanel();
     });
     Array.prototype.forEach.call(el.querySelectorAll('[data-rename]'),function(c){
       c.addEventListener('click',function(){
@@ -312,10 +349,10 @@ function renderPanel(){
   }
   if(sel.t==='bar'){
     var bi=sel.i,bp=sel.p,k=state.airs[bi].barriers[bp];
-    var leftL=state.airs[bi].lots[bp],rightL=state.airs[bi].lots[bp+1];
+    var leftL=lotById(state.airs[bi].lots[bp]),rightL=lotById(state.airs[bi].lots[bp+1]);
     el.innerHTML='<div class="ph">Barrière — '+AIRES[bi].lab+', colonne '+k+'<button class="closep" id="pClose">✕</button></div>'+
       '<div class="row"><button class="act" data-a="bm">◀ 1 place</button><button class="act" data-a="bp">1 place ▶</button><button class="warn" data-a="bd">Supprimer</button></div>'+
-      '<div class="vv" style="margin:4px 0">Gauche : L'+(leftL+1)+' · Droite : L'+(rightL+1)+'</div>'+
+      '<div class="vv" style="margin:4px 0">Gauche : '+esc(lotShort(leftL))+' · Droite : '+esc(lotShort(rightL))+'</div>'+
       '<div class="hint">Tu peux aussi la glisser directement dans le dessin. 1 place ≈ 33 cm.</div>';
     Array.prototype.forEach.call(el.querySelectorAll('[data-a]'),function(bt){
       bt.addEventListener('click',function(){
@@ -337,12 +374,14 @@ function bindChips(i,j){
     c.addEventListener('click',function(){
       var v=c.getAttribute('data-lot');
       if(v==='new'){
+        var nm=prompt('Nom du nouveau lot ? (facultatif)','');
+        if(nm===null)return;
         var cur=lotById(state.airs[i].lots[j]);
         var id=state.nextLot++;
-        state.lots.push({id:id,b:0,rt:cur?JSON.parse(JSON.stringify(cur.rt||{})):{}});
+        state.lots.push({id:id,b:0,rt:cur?JSON.parse(JSON.stringify(cur.rt||{})):{},name:nm.trim()||null});
         state.airs[i].lots[j]=id;
       } else state.airs[i].lots[j]=+v;
-      cleanupLots();save();
+      save();
       renderMap();renderPanel();
     });
   });
@@ -350,23 +389,30 @@ function bindChips(i,j){
 function bindLot(id){
   var l=lotById(id),st=lotStats(id);
   var inB=$('inB');
-  function refresh(){
+  function refresh(kind,fid){
     state.feeds.forEach(function(f){
       var r=feedVal(l,f.id);
-      if($('ft_'+f.id))$('ft_'+f.id).value=fmt(st.P*r,2);
-      if($('fp_'+f.id))$('fp_'+f.id).textContent=l.b>0?Math.round(st.P*r/l.b*1000)+' g/brebis':'—';
+      if(!(kind==='fr'&&f.id===fid)&&$('fr_'+f.id))$('fr_'+f.id).value=fmt(r,3);
+      if(!(kind==='ft'&&f.id===fid)&&$('ft_'+f.id))$('ft_'+f.id).value=fmt(st.P*r,2);
+      var per=l.b>0?st.P*r/l.b*1000:null;
+      if($('fp_'+f.id))$('fp_'+f.id).textContent=per==null?'—':Math.round(per)+' g/brebis';
     });
-    var totKg=st.P*sumRations(l);
-    var el2=$('totLine');
-    if(el2)el2.textContent=fmt(totKg)+' kg · '+(l.b>0?Math.round(totKg/l.b*1000)+' g/brebis':'—');
+    var max=0;state.feeds.forEach(function(f){max=Math.max(max,st.P*feedVal(l,f.id));});
+    state.feeds.forEach(function(f){
+      var t=st.P*feedVal(l,f.id);
+      if($('fbar_'+f.id))$('fbar_'+f.id).style.width=(max>0?Math.max(2,Math.round(t/max*100)):0)+'%';
+    });
+    var tot=st.P*sumRations(l);
+    if($('totKg'))$('totKg').textContent=fmt(tot)+' kg';
+    if($('totPer'))$('totPer').textContent=l.b>0?'≈ '+Math.round(tot/l.b*1000)+' g / brebis':'saisis les brebis';
     renderMap();save();
   }
   inB.addEventListener('input',function(){l.b=Math.max(0,Math.round(pnum(inB.value)));refresh();});
   state.feeds.forEach(function(f){
     var fr=$('fr_'+f.id),ft=$('ft_'+f.id);
     if(!fr)return;
-    fr.addEventListener('input',function(){setFeedVal(l,f.id,Math.max(0,pnum(fr.value)));refresh();});
-    ft.addEventListener('input',function(){setFeedVal(l,f.id,st.P>0?Math.max(0,pnum(ft.value))/st.P:0);refresh();});
+    fr.addEventListener('input',function(){setFeedVal(l,f.id,Math.max(0,pnum(fr.value)));refresh('fr',f.id);});
+    ft.addEventListener('input',function(){setFeedVal(l,f.id,st.P>0?Math.max(0,pnum(ft.value))/st.P:0);refresh('ft',f.id);});
   });
   Array.prototype.forEach.call($('panel').querySelectorAll('.step'),function(bt){
     bt.addEventListener('click',function(){l.b=Math.max(0,l.b+parseInt(bt.getAttribute('data-step'),10));inB.value=l.b;refresh();});
@@ -375,6 +421,21 @@ function bindLot(id){
   if(ba)ba.addEventListener('click',function(){
     state.lots.forEach(function(x){if(x.id!==l.id)x.rt=JSON.parse(JSON.stringify(l.rt||{}));});
     save();renderPanel();
+  });
+  var br=$('btnRename');
+  if(br)br.addEventListener('click',function(){
+    var n=prompt('Nom du lot ?',l.name||'');
+    if(n===null)return;
+    l.name=n.trim()||null;save();renderMap();renderPanel();
+  });
+  var bd=$('btnDelLot');
+  if(bd)bd.addEventListener('click',function(){
+    var stt=lotStats(id);
+    if(stt.segs.length){alert('Ce lot a encore '+stt.segs.length+' morceau(x) : attribue-les à un autre lot avant de le supprimer.');return;}
+    if(!confirm('Supprimer « '+lotName(l)+' » ?'))return;
+    state.lots=state.lots.filter(function(x){return x.id!==id;});
+    if(!state.lots.length)state.lots=[{id:state.nextLot++,b:0,rt:{}}];
+    sel=null;save();renderMap();renderPanel();
   });
 }
 
@@ -436,10 +497,8 @@ function hitBarrier(p){
 }
 function segAt(p){
   var ai=aireAt(p.y);
-  if(ai<0||p.x<-0.2)return null;
-  if(ai===3&&p.x>TS_END+0.2)return null;
-  if(ai<3&&p.x>DBL_END+0.2)return null;
-  if(ai===3&&p.x>DBL_END+0.2)return {i:3,j:state.airs[3].lots.length-1};
+  if(ai<0||p.x<-0.2||p.x>L+0.2)return null;
+  if(p.x>DBL_END+0.2)return {i:ai,j:state.airs[ai].lots.length-1};
   var kF=(p.x-DBL_X0)/DBL_LEN*DBL_PL,ks=ksOf(ai);
   for(var j=0;j<ks.length-1;j++)if(kF>=ks[j]-1e-9&&kF<=ks[j+1]+1e-9)return {i:ai,j:j};
   return null;
