@@ -1,15 +1,18 @@
-# 🐑 Bergerie — lots & rations
+# 🐑 Ma bergerie — lots & rations
 
-Mini-appli pour modéliser la bergerie : barrières par aire, lots (nommables, multi-aires), places au tapis par lot, rations par brebis, et **réglage des trémies** tapis par tapis.
+Plan interactif de la bergerie (35 m × 22 m) : aires, tapis, barrières positionnables, lots et rations.
 
-**Utilisation :** https://vincentvaysset.github.io/Conges/bergerie/
+**🔗 Ouvrir : <https://vincentvaysset.github.io/Conges/bergerie/>**
 
-Pense-bête :
-- **Appui long** dans une aire = ajouter une barrière à cet endroit (grille des places, 1 place ≈ 33 cm)
-- Touche un morceau d'aire → choisir son lot, saisir les brebis et les rations
-- Touche une barrière → la déplacer place par place ou la supprimer
-- **Lots** : créer (＋ Nouveau lot), renommer (✏️), supprimer (🗑) — un lot peut couvrir plusieurs aires
-- **Rations** : g/brebis ↔ kg du lot, liés (aliments : créer/renommer/supprimer depuis le Résumé, icônes auto 🌾 🌽 🫘…)
-- **🚜 Trémies** : quoi verser sur chaque tapis, place par place — sur un tapis double, la dose par emplacement additionne les 2 lots face à face ; le total versé correspond aux g/brebis visés
+## Comment ça marche
 
-Les données sont enregistrées automatiquement dans le téléphone/navigateur (localStorage).
+- **Onglets** : 🏠 Bergerie (résumé + gestion des aliments), un onglet par lot, ＋ Lot, 🚜 Trémies.
+- Touche un morceau d'aire dans le dessin pour l'attribuer à un lot ; **appui long** dans une aire = nouvelle barrière (déplaçable au doigt ou ±1 place, 1 place ≈ 33 cm).
+- Chaque lot : nombre de brebis, rations par aliment en **g/brebis/j ↔ kg/lot** (tout se recalcule dans les 2 sens), total du lot.
+- Onglet **🚜 Trémies** : pour chaque aliment, la dose à régler sur chaque tapis en **grammes par place** (places numérotées de gauche à droite), plus le total à verser.
+- Dans le dessin, chaque aire affiche le nom du lot, le nombre de brebis 🐑 et la ration en g/j.
+- Toutes les saisies se font dans la page (aucune fenêtre du navigateur) ; les suppressions demandent une 2ᵉ touche de confirmation.
+- Données sauvegardées automatiquement sur l'appareil, compatibles avec les versions précédentes.
+- Bouton ⟲ dans l'en-tête : remise à zéro en 2 touches.
+
+Utilisable sur téléphone ; fonctionne hors-ligne une fois la page chargée.
