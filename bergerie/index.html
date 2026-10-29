@@ -224,9 +224,26 @@ function trieHtml(){
     });
     cards+='<div class="fcard" style="background:#fff"><div class="fc-top"><span class="fc-name">'+names[t]+'</span><span class="su">total '+fmt(tot,1)+' kg</span></div>'+((lines)||'<div class="vv">rien à verser</div>')+'</div>';
   }
+  var ctrl='';
+  state.lots.forEach(function(l){
+    if(!(l.b>0))return;
+    var kg=0,pl=0;
+    for(var tC=0;tC<4;tC++){
+      var rsC=(tC<3?dblRanges(tC):tsRanges());
+      rsC.forEach(function(r){
+        var n=r.k2-r.k1,sides=(r.a===l.id?1:0)+((r.b!=null&&r.b===l.id)?1:0);
+        if(!sides)return;
+        state.feeds.forEach(function(f){kg+=n*sides*perPlace(l,f.id);});
+        pl+=n*sides;
+      });
+    }
+    if(pl<=0)return;
+    ctrl+='<div class="trow"><span class="dot" style="background:'+lotCol(l.id)+'"></span><span class="vv" style="flex:1">'+esc(lotShort(l))+' · <b>'+fmt(kg)+' kg</b> sur ses '+pl+' places</span><span class="vv">÷ '+l.b+' 🐑 = <b>'+Math.round(kg/l.b*1000)+' g/j</b> ✓</span></div>';
+  });
   return head+cards+
     '<div class="tot">À verser au total <b>'+fmt(grand)+' kg</b></div>'+
-    '<div class="hint">Places numérotées de 1 (à gauche). Chaque aliment a sa propre dose par place, à régler denrée par denrée. Sur un tapis double, la trémie verse au milieu en une seule fois : impossible de différencier les 2 côtés — quand 2 lots se font face, ils reçoivent la même ration (les doses additionnent leurs besoins). En moyenne, chaque brebis mange bien sa ration g/j.</div>';
+    ((ctrl)?'<div class="ph" style="margin-top:6px">✓ Contrôle par lot</div>'+ctrl:'')+
+    '<div class="hint">Places numérotées de 1 (à gauche). Chaque aliment a sa propre dose par place, à régler denrée par denrée. Sur un tapis double, la trémie verse au milieu en une seule fois : impossible de différencier les 2 côtés — quand 2 lots se font face, ils reçoivent la même ration (les doses additionnent leurs besoins). En moyenne, chaque brebis mange bien sa ration g/j — le contrôle par lot le vérifie (total versé au lot ÷ effectif).</div>';
 }
 function feedEmoji(name){
   var n=(name||'').toLowerCase();
