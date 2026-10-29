@@ -15,7 +15,7 @@ Plan interactif de la bergerie (35 m × 22 m) : aires, tapis, barrières, lots e
 
 ## Onglet Trémies
 - Pour chaque tapis et chaque plage de places : la dose à régler par aliment, plus le total à verser.
-- La trémie verse au milieu du tapis : une seule ration pour les 2 rangées. « 2 × » la part du lot quand il est seul des 2 côtés ; somme des parts des 2 lots (affichées) quand 2 lots se partagent le tapis.
+- La trémie verse au milieu du tapis : une seule ration pour les 2 rangées. « 2 × » la dose par rangée — impossible à séparer quand 2 lots se partagent le tapis.
 - Contrôle par lot : total versé au lot sur toutes ses places ÷ son effectif = sa ration g/j.
 
 ## Données
