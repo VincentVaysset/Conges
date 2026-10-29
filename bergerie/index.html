@@ -2,82 +2,109 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ma bergerie — lots & rations</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#3c7a4e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Bergerie">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Ma bergerie — Lots & rations</title>
 <style>
-  :root{--vert:#3c7a4e;--creme:#fbf8f1;--orange:#e3812f;--danger:#d1584f;--encre:#2f2a26;}
+  :root{--vert:#3c7a4e;--vertf:#eaf2ec;--creme:#fbf8f1;--orange:#e3812f;--danger:#d1584f;--encre:#26221e;--muet:#8a8175;--ligne:#e6dfd0;}
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;height:100%}
-  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--creme);color:var(--encre);display:flex;flex-direction:column;height:100dvh;overflow:hidden}
-  header{background:var(--vert);color:#fff;padding:10px 12px}
-  .hrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  h1{font-size:17px;margin:0;font-weight:700;flex:1;white-space:nowrap}
-  button{font:inherit;border:none;border-radius:9px;padding:8px 12px;cursor:pointer}
-  .btnw{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.35)}
-  .btnw:active{background:rgba(255,255,255,.32)}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--creme);color:var(--encre);display:flex;flex-direction:column;height:100dvh;overflow:hidden;-webkit-tap-highlight-color:transparent}
+  header{background:var(--vert);color:#fff;flex-shrink:0}
+  .hrow{display:flex;align-items:center;gap:10px;padding:8px 14px}
+  .brand{line-height:1.18;flex:1;min-width:0}
+  .brand b{font-size:16px;font-weight:700;letter-spacing:.2px;display:block;white-space:nowrap}
+  .brand span{font-size:10.5px;opacity:.75;letter-spacing:.8px;text-transform:uppercase;display:block}
+  button{font:inherit;border:none;border-radius:10px;cursor:pointer;background:none;padding:8px 12px;color:inherit}
+  .btnw{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28);width:38px;height:38px;display:flex;align-items:center;justify-content:center;padding:0}
+  .btnw:active{background:rgba(255,255,255,.3)}
+  .btnw.warn{background:var(--danger);border-color:var(--danger)}
+  #main{flex:1;display:flex;flex-direction:column;min-height:0}
   #mapWrap{flex:1;position:relative;min-height:0;background:#efe9dc}
   #map{width:100%;height:100%;display:block;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   .zooms{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px}
-  .zooms button{width:38px;height:38px;background:#fff;border:1px solid #c9c2b6;color:var(--encre);font-size:17px;display:flex;align-items:center;justify-content:center;padding:0}
-  #tabs{display:flex;gap:6px;overflow-x:auto;padding:8px 10px 4px;background:#fff;border-top:1px solid #ddd6c8;flex-shrink:0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .zooms button{width:38px;height:38px;background:#fff;border:1px solid var(--ligne);color:var(--encre);display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 1px 4px rgba(38,34,30,.12)}
+  #side{flex-shrink:0;display:flex;flex-direction:column;background:#fff;border-top:1px solid var(--ligne)}
+  #tabs{display:flex;gap:6px;overflow-x:auto;padding:8px 10px 2px;background:#fff;-webkit-overflow-scrolling:touch;scrollbar-width:none}
   #tabs::-webkit-scrollbar{display:none}
-  .tab{display:flex;align-items:center;gap:5px;border-radius:999px;padding:7px 12px;border:2px solid #e4ddcd;background:#f4efe4;color:#3c3a34;font-weight:700;font-size:14px;white-space:nowrap;flex-shrink:0}
-  .tab.on{border-color:var(--vert);background:#eaf2ec}
-  .tab .dot{width:12px;height:12px}
-  #panel{background:#fff;padding:4px 12px 14px;max-height:46dvh;overflow:auto;flex-shrink:0}
-  .ph{font-weight:700;color:var(--vert);display:flex;align-items:center;gap:8px;margin:2px 0 4px;flex-wrap:wrap}
-  .dot{width:14px;height:14px;border-radius:5px;display:inline-block;flex-shrink:0}
+  .tab{display:flex;align-items:center;gap:6px;border-radius:999px;padding:7px 13px;border:1.5px solid var(--ligne);background:#faf7f0;color:#4a443d;font-weight:600;font-size:13.5px;white-space:nowrap;flex-shrink:0}
+  .tab.on{border-color:var(--vert);background:var(--vertf);color:var(--vert)}
+  .tab svg{flex-shrink:0}
+  .tab .dot{width:11px;height:11px;border-radius:4px;flex-shrink:0}
+  .cbar{display:flex;justify-content:center;flex-shrink:0;padding:2px 0 3px}
+  .cbar button{display:flex;align-items:center;gap:6px;color:var(--muet);font-size:12px;font-weight:600;letter-spacing:.4px;padding:5px 14px;border-radius:999px}
+  .cbar button:active{background:#f3eee3}
+  #panel{padding:2px 14px 16px;max-height:42dvh;overflow:auto;flex-shrink:0}
+  #side.min #panel{display:none}
+  .ph{font-weight:700;color:var(--vert);display:flex;align-items:center;gap:8px;margin:6px 0 4px;flex-wrap:wrap;font-size:15px}
+  .dot{width:13px;height:13px;border-radius:4px;display:inline-block;flex-shrink:0}
   .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0}
-  .lbl{font-size:14px;color:#5a5248;min-width:82px}
+  .lbl{font-size:11px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--muet);min-width:82px}
   .vv{font-size:14px;color:#4a4440;line-height:1.4}
   .big{font-size:16px;font-weight:700}
-  button.step{width:42px;height:42px;background:var(--creme);border:1px solid #c9c2b6;color:var(--encre);font-size:20px;padding:0}
+  button.step{width:42px;height:42px;background:#faf7f0;border:1px solid var(--ligne);color:var(--encre);font-size:20px;padding:0}
   button.act{background:var(--vert);color:#fff}
   button.warn{background:var(--danger);color:#fff}
-  .closep{margin-left:auto;background:#efe9dc;color:#5a5248;padding:4px 10px;border-radius:8px}
-  .btnsm{background:#efe9dc;color:#5a5248;padding:4px 8px;border-radius:8px;font-size:14px}
+  .closep{margin-left:auto;background:#f3eee3;color:#5a5248;padding:6px 9px;border-radius:9px;display:flex;align-items:center}
+  .btnsm{background:#f3eee3;color:#4a443d;padding:5px 10px;border-radius:9px;font-size:13.5px;display:inline-flex;align-items:center;gap:6px}
   .btnsm.danger{background:#fdeceb;color:#a33b32}
-  input{font:inherit;border:1px solid #c9c2b6;border-radius:9px;padding:9px 8px;background:#fff;color:var(--encre);font-size:16px;text-align:center}
+  input{font:inherit;border:1px solid var(--ligne);border-radius:10px;padding:9px 8px;background:#fff;color:var(--encre);font-size:16px;text-align:center}
   input.short{width:76px}
-  .hint{font-size:13px;color:#7a7267;margin-top:8px;line-height:1.45}
-  .sep{border-top:1px solid #eee7d8;margin:10px 0}
-  .chip{border-radius:999px;padding:7px 13px;border:2px solid transparent;font-weight:600;background:#efe9dc;color:var(--encre)}
-  .chip.on{border-color:#2f2a26}
-  .fcard{border-radius:12px;padding:8px 10px;margin:8px 0}
-  .fc-top{display:flex;align-items:center;gap:6px}
-  .fc-emoji{font-size:18px}
-  .fc-name{font-weight:700;flex:1}
-  .fc-bar{height:9px;border-radius:5px;background:#eee7d8;margin:6px 0 4px;overflow:hidden}
-  .fc-fill{height:100%;border-radius:5px}
+  .hint{font-size:12.5px;color:var(--muet);margin-top:8px;line-height:1.45}
+  .sep{border-top:1px solid var(--ligne);margin:10px 0}
+  .chip{border-radius:999px;padding:7px 13px;border:2px solid transparent;font-weight:600;background:#f3eee3;color:var(--encre);font-size:13.5px}
+  .chip.on{border-color:var(--encre)}
+  .fcard{border-radius:12px;padding:8px 12px;margin:8px 0;background:#fff;border:1px solid var(--ligne)}
+  .fc-top{display:flex;align-items:center;gap:7px}
+  .fc-name{font-weight:600;flex:1}
+  .fc-bar{height:8px;border-radius:4px;background:#f0ebdd;margin:6px 0 4px;overflow:hidden}
+  .fc-fill{height:100%;border-radius:4px}
   .fc-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   .tot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0;font-size:15px}
   .tot b{font-size:18px}
-  .mini{font-size:12px;border-radius:8px;padding:2px 7px;margin:1px;display:inline-block}
-  .lotsList .lrow{display:flex;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px solid #eee7d8;cursor:pointer;flex-wrap:wrap}
-  .lotsList .lrow:active{background:#f6f1e6}
+  .mini{font-size:12px;border-radius:8px;padding:2px 7px;margin:1px;display:inline-flex;align-items:center;gap:5px}
+  .mini .dot{width:9px;height:9px}
+  .lotsList .lrow{display:flex;align-items:center;gap:8px;padding:10px 4px;border-bottom:1px solid var(--ligne);cursor:pointer;flex-wrap:wrap}
+  .lotsList .lrow:active{background:#faf7f0}
   .lrow .nm{font-weight:700}
-  .su{font-size:12px;color:#9a9184;border:1px solid #d8d1c3;border-radius:6px;padding:2px 6px;margin-left:2px}
-  .trow{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #eee7d8;flex-wrap:wrap}
-  .notice{background:#fdeceb;color:#a33b32;border-radius:8px;padding:6px 10px;font-size:13px;margin:6px 0}
+  .su{font-size:12px;color:#7a7267;border:1px solid var(--ligne);border-radius:7px;padding:2px 7px;margin:1px;display:inline-block;background:#faf7f0}
+  .trow{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f3eee3;flex-wrap:wrap}
+  .notice{background:#f3eee3;border:1px solid var(--ligne);border-radius:10px;padding:7px 11px;font-size:13px;margin:6px 0;display:flex;gap:8px;align-items:flex-start;color:#4a443d}
+  .notice svg{flex-shrink:0;margin-top:1px}
+  .notice.ko{background:#fdeceb;color:#a33b32;border-color:#f2cdc9}
+  @media(min-width:920px){
+    #main{flex-direction:row}
+    #side{width:430px;border-top:none;border-left:1px solid var(--ligne)}
+    #panel{max-height:none;flex:1;min-height:0}
+  }
 </style>
 </head>
 <body>
 <header>
   <div class="hrow">
-    <h1>🐑 Ma bergerie — lots &amp; rations</h1>
-    <button class="btnw" id="btnReset" title="Tout remettre à zéro">⟲</button>
+    <div class="brand"><b>Ma bergerie</b><span>Lots &amp; rations</span></div>
+    <button class="btnw" id="btnReset" title="Tout remettre à zéro"></button>
   </div>
 </header>
-<main id="mapWrap">
-  <svg id="map" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"></svg>
-  <div class="zooms">
-    <button id="zin" title="Zoomer">＋</button>
-    <button id="zout" title="Dézoomer">－</button>
-    <button id="zfit" title="Vue complète">▢</button>
+<main id="main">
+  <div id="mapWrap">
+    <svg id="map" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="zooms">
+      <button id="zin" title="Zoomer"></button>
+      <button id="zout" title="Dézoomer"></button>
+      <button id="zfit" title="Vue complète"></button>
+    </div>
+  </div>
+  <div id="side">
+    <nav id="tabs"></nav>
+    <div class="cbar"><button id="pcol" title="Afficher ou masquer les détails"></button></div>
+    <section id="panel"></section>
   </div>
 </main>
-<nav id="tabs"></nav>
-<section id="panel"></section>
 <script>
 'use strict';
 /* ============ BERGERIE — valeurs ajustables ============
@@ -102,6 +129,28 @@ var TAPIS=[
 ];
 var LOT_COLS=['#a8d5b0','#f5cfa0','#a9cbe8','#f2b8cf','#e8e0a0','#c9b8e8','#9fd9c8','#f0b9a0'];
 var FEED_COLS=['#6a994e','#d9a441','#7b6cbf','#4d8fd1','#c96a5b','#3ba99c','#b5853f','#8a8f5a'];
+
+/* ============ icônes ============ */
+var ICONS={
+  plan:'<rect x="3" y="3" width="18" height="18" rx="2.5"/><path d="M3 9.5h18M9.5 3v18"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  hopper:'<path d="M4.5 4.5h15l-5.5 7v4.5l-4 3v-7.5z"/>',
+  chevU:'<path d="M6 14l6-6 6 6"/>',
+  chevD:'<path d="M6 10l6 6 6-6"/>',
+  reset:'<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5"/><path d="M3.5 3.5v5h5"/>',
+  zin:'<circle cx="11" cy="11" r="7.5"/><path d="M21 21l-4.4-4.4M11 8v6M8 11h6"/>',
+  zout:'<circle cx="11" cy="11" r="7.5"/><path d="M21 21l-4.4-4.4M8 11h6"/>',
+  fit:'<path d="M8.5 3.5h-5v5M15.5 3.5h5v5M8.5 20.5h-5v-5M15.5 20.5h5v-5"/>',
+  pen:'<path d="M13.5 20.5h7"/><path d="M16.4 3.9a2 2 0 0 1 2.8 2.8L7.5 18.4l-3.9 1 1-3.9z"/>',
+  trash:'<path d="M3.5 6.5h17M8.5 6.5v-2h7v2M18.5 6.5l-1 14h-11l-1-14M10 11v5.5M14 11v5.5"/>',
+  warn:'<path d="M12 3.5L2.5 19.5a1.5 1.5 0 0 0 1.3 2.3h16.4a1.5 1.5 0 0 0 1.3-2.3L12 3.5z"/><path d="M12 10v4M12 17.5h.01"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M12 11.5V16"/>',
+  check:'<path d="M20 6.5L9.5 17.5 4 12"/>',
+  close:'<path d="M17.5 6.5l-11 11M6.5 6.5l11 11"/>',
+  dl:'<path d="M12 3.5v11M7.5 10.5L12 15l4.5-4.5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
+  ul:'<path d="M12 15.5v-11M7.5 8.5L12 4l4.5 4.5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>'
+};
+function ic(n,s){return '<svg viewBox="0 0 24 24" width="'+(s||13)+'" height="'+(s||13)+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+ICONS[n]+'</svg>';}
 
 /* ============ état ============ */
 var KEY='bergerie_lots_v5',KEYOLD='bergerie_lots_v3';
@@ -133,7 +182,7 @@ function save(){
   catch(e){storageKo=true;}
 }
 var state=loadS()||defaultState();
-var sel=null,showTrie=false,editName=null,editFeed=null,arm=null,notice='';
+var sel=null,showTrie=false,editName=null,editFeed=null,arm=null,notice='',panelMin=false;
 
 /* ============ géométrie ============ */
 function xOfK(k){return DBL_X0+DBL_LEN*k/DBL_PL;}
@@ -199,8 +248,8 @@ function tsRanges(){
   return out;
 }
 function trieHtml(){
-  var head='<div class="ph">🚜 Réglage des trémies<button class="closep" id="pCloseTrie">✕</button></div>';
-  if(!state.feeds.length)return head+'<div class="vv">Aucun aliment : ajoute-en depuis l’onglet 🏠.</div>';
+  var head='<div class="ph">Trémies — réglage par place<button class="closep" id="pCloseTrie">'+ic('close',12)+'</button></div>';
+  if(!state.feeds.length)return head+'<div class="vv">Aucun aliment : ajoute-en depuis l’onglet Bergerie.</div>';
   var names=['Tapis double 1','Tapis double 2','Tapis double 3','Tapis simple'];
   var cards='',grand=0;
   for(var t=0;t<4;t++){
@@ -215,14 +264,22 @@ function trieHtml(){
       var fed=state.feeds.filter(function(f){return (r.doses[f.id]||0)>0.0005;});
       function feedLine(f,compact){
         var pa=Math.round(perPlace(lotById(r.a),f.id)*1000);
-        var split=(same?'<span class="su">2 × '+pa+' g</span>':'');
-        var nm='<span class="fc-emoji">'+feedEmoji(f.name)+'</span> '+esc(f.name);
+        var nm='<span class="dot" style="background:'+colFeed(f.id)+'"></span>'+esc(f.name);
+        var split='';
+        if(same){split='<span class="su">2 × '+pa+' g</span>';}
+        else if(r.b!=null){
+          var pb=Math.round(perPlace(lotById(r.b),f.id)*1000);
+          var parts=[];
+          if(pa>0.5)parts.push(esc(lotShort(lotById(r.a)))+' '+pa);
+          if(pb>0.5)parts.push(esc(lotShort(lotById(r.b)))+' '+pb);
+          if(parts.length)split='<span class="su">'+parts.join(' + ')+' g</span>';
+        }
         if(compact)return '<div class="trow">'+dots+'<span class="vv" style="flex:1">places <b>'+(r.k1+1)+'–'+r.k2+'</b> <span class="su">'+esc(who)+'</span> '+nm+'</span>'+split+'<b>'+Math.round(r.doses[f.id]*1000)+' g/place</b></div>';
-        return '<div class="trow" style="padding-left:24px"><span class="vv" style="flex:1">'+nm+'</span>'+split+'<b>'+Math.round(r.doses[f.id]*1000)+' g/place</b></div>';
+        return '<div class="trow" style="padding-left:22px"><span class="vv" style="flex:1">'+nm+'</span>'+split+'<b>'+Math.round(r.doses[f.id]*1000)+' g/place</b></div>';
       }
       lines+=(fed.length===1)?feedLine(fed[0],true):('<div class="trow">'+dots+'<span class="vv" style="flex:1">places <b>'+(r.k1+1)+'–'+r.k2+'</b> <span class="su">'+esc(who)+'</span></span></div>'+fed.map(function(f){return feedLine(f,false);}).join(''));
     });
-    cards+='<div class="fcard" style="background:#fff"><div class="fc-top"><span class="fc-name">'+names[t]+'</span><span class="su">total '+fmt(tot,1)+' kg</span></div>'+((lines)||'<div class="vv">rien à verser</div>')+'</div>';
+    cards+='<div class="fcard"><div class="fc-top"><span class="fc-name">'+names[t]+'</span><span class="su">total '+fmt(tot,1)+' kg</span></div>'+((lines)||'<div class="vv">rien à verser</div>')+'</div>';
   }
   var ctrl='';
   state.lots.forEach(function(l){
@@ -238,28 +295,60 @@ function trieHtml(){
       });
     }
     if(pl<=0)return;
-    ctrl+='<div class="trow"><span class="dot" style="background:'+lotCol(l.id)+'"></span><span class="vv" style="flex:1">'+esc(lotShort(l))+' · <b>'+fmt(kg)+' kg</b> sur ses '+pl+' places</span><span class="vv">÷ '+l.b+' 🐑 = <b>'+Math.round(kg/l.b*1000)+' g/j</b> ✓</span></div>';
+    ctrl+='<div class="trow"><span class="dot" style="background:'+lotCol(l.id)+'"></span><span class="vv" style="flex:1">'+esc(lotShort(l))+' · <b>'+fmt(kg)+' kg</b> sur ses '+pl+' places</span><span class="vv">÷ '+l.b+' têtes = <b>'+Math.round(kg/l.b*1000)+' g/j</b> '+ic('check',11)+'</span></div>';
   });
   return head+cards+
     '<div class="tot">À verser au total <b>'+fmt(grand)+' kg</b></div>'+
-    ((ctrl)?'<div class="ph" style="margin-top:6px">✓ Contrôle par lot</div>'+ctrl:'')+
-    '<div class="hint">Places numérotées de 1 (à gauche). Chaque aliment a sa propre dose par place, à régler denrée par denrée. Sur un tapis double, la trémie verse au milieu en une seule fois : impossible de différencier les 2 côtés — quand 2 lots se font face, ils reçoivent la même ration (les doses additionnent leurs besoins). En moyenne, chaque brebis mange bien sa ration g/j — le contrôle par lot le vérifie (total versé au lot ÷ effectif).</div>';
-}
-function feedEmoji(name){
-  var n=(name||'').toLowerCase();
-  if(/blé|blé |orge|avoine|tritic|céré|cereal/.test(n))return '🌾';
-  if(/maïs|mais|corn/.test(n))return '🌽';
-  if(/tourteau|soja|colza|pois|féverole|feverole/.test(n))return '🫘';
-  if(/foin|luzerne|herbe|fourr|paille/.test(n))return '🌿';
-  if(/pulpe|betterave/.test(n))return '🍠';
-  if(/lait/.test(n))return '🥛';
-  if(/minéral|mineral|sel|vitamine|vita/.test(n))return '🧂';
-  return '🌰';
+    ((ctrl)?'<div class="ph">'+ic('check',14)+' Contrôle par lot</div>'+ctrl:'')+
+    '<div class="hint">Places numérotées depuis la gauche. La trémie verse au milieu du tapis : une seule ration pour les 2 rangées — « 2 × » la part du lot quand il est seul, somme des parts des 2 lots quand ils se partagent le tapis. Contrôle par lot : total versé ÷ effectif = sa ration g/j.</div>';
 }
 function fmt(n,d){if(d==null)d=2;return (+(n.toFixed(d))).toFixed(d).replace('.',',');}
 function pnum(v){var x=parseFloat(String(v).replace(',','.'));return isNaN(x)?0:x;}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function $(id){return document.getElementById(id);}
+
+/* ============ sauvegarde fichier (export / import) ============ */
+function exportData(){
+  try{
+    var data=JSON.stringify({app:'bergerie-lots',v:5,date:new Date().toISOString(),state:state});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));
+    a.download='bergerie-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},2000);
+    notice='Sauvegarde téléchargée — garde-la précieusement.';
+  }catch(e){notice='Export impossible sur ce navigateur.';}
+  save();renderPanel();
+}
+function importJson(text){
+  try{
+    var o=JSON.parse(text);
+    var s=(o&&o.state&&o.state.lots&&o.state.airs&&o.state.feeds)?o.state:((o&&o.lots&&o.airs&&o.feeds)?o:null);
+    if(!s||!Array.isArray(s.lots)||!Array.isArray(s.feeds)||!Array.isArray(s.airs)||s.airs.length!==4)return {ok:false,msg:'Sauvegarde non reconnue.'};
+    var mL=0,mF=0;
+    s.lots.forEach(function(l){mL=Math.max(mL,(l.id||0)+1);});
+    s.feeds.forEach(function(f){mF=Math.max(mF,(f.id||0)+1);});
+    s.nextLot=Math.max(s.nextLot||0,mL);
+    s.nextFeed=Math.max(s.nextFeed||0,mF);
+    s.lots.forEach(function(l){l.b=l.b||0;l.r=l.r||{};});
+    return {ok:true,msg:'Import : '+s.lots.length+' lot(s), '+s.feeds.length+' aliment(s).',state:s};
+  }catch(e){return {ok:false,msg:'Fichier illisible.'};}
+}
+function applyImport(text){
+  var r=importJson(text);
+  if(r.ok){state=r.state;sel=null;showTrie=false;notice=r.msg;save();renderMap();renderTabs();renderPanel();}
+  else{notice=r.msg;renderPanel();}
+}
+function doImport(file){
+  if(!file)return;
+  try{
+    var rd=new FileReader();
+    rd.onload=function(){applyImport(String(rd.result));};
+    rd.onerror=function(){notice='Fichier illisible.';renderPanel();};
+    rd.readAsText(file);
+  }catch(e){notice='Import impossible sur ce navigateur.';renderPanel();}
+}
 
 var svg=$('map');
 var view={x:0,y:0,w:35.8,h:23.2};
@@ -311,7 +400,7 @@ function renderMap(){
       if(w>=1.6){
         o.push('<text x="'+cx+'" y="'+(b.y+b.h/2-0.1)+'" font-size="0.75" font-weight="700" fill="#33402f" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="0.12" stroke-opacity="0.85">'+esc(lotShort(lo))+'</text>');
         var bb=lo?(lo.b||0):0, gj=lo?Math.round(sumRations(lo)*1000):0;
-        var l2=bb>0?(bb+' 🐑'+(gj>0?' · '+gj+' g/j':'')):'';
+        var l2=bb>0?(bb+' têtes'+(gj>0?' · '+gj+' g/j':'')):'';
         if(l2&&w>=3.0)o.push('<text x="'+cx+'" y="'+(b.y+b.h/2+0.85)+'" font-size="0.55" fill="#5a5248" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="0.1" stroke-opacity="0.85">'+l2+'</text>');
       }
     });
@@ -347,16 +436,21 @@ function renderMap(){
   svg.innerHTML=o.join('');
 }
 
-/* ============ onglets ============ */
+/* ============ onglets & panneau ============ */
+function setPanelMin(v){
+  panelMin=v;
+  var sd=$('side');if(sd){if(v)sd.classList.add('min');else sd.classList.remove('min');}
+  var pc=$('pcol');if(pc)pc.innerHTML=(v?ic('chevD',13)+'<span>Détails</span>':ic('chevU',13)+'<span>Masquer</span>');
+}
 function renderTabs(){
   var h='',homeOn=!sel&&!showTrie&&!(sel&&sel.t==='new');
-  h+='<button class="tab'+(homeOn?' on':'')+'" data-tab="home">🏠 Bergerie</button>';
+  h+='<button class="tab'+(homeOn?' on':'')+'" data-tab="home">'+ic('plan',13)+'<span>Bergerie</span></button>';
   state.lots.forEach(function(l){
     var on=!showTrie&&sel&&((sel.t==='lot'&&sel.id===l.id)||(sel.t==='seg'&&state.airs[sel.i].lots[sel.j]===l.id));
     h+='<button class="tab'+(on?' on':'')+'" data-tab="lot" data-id="'+l.id+'"><span class="dot" style="background:'+lotCol(l.id)+'"></span>'+esc(lotShort(l))+'</button>';
   });
-  h+='<button class="tab'+(sel&&sel.t==='new'?' on':'')+'" data-tab="new">＋ Lot</button>';
-  h+='<button class="tab'+(showTrie?' on':'')+'" data-tab="trie">🚜 Trémies</button>';
+  h+='<button class="tab'+(sel&&sel.t==='new'?' on':'')+'" data-tab="new">'+ic('plus',13)+'<span>Lot</span></button>';
+  h+='<button class="tab'+(showTrie?' on':'')+'" data-tab="trie">'+ic('hopper',13)+'<span>Trémies</span></button>';
   $('tabs').innerHTML=h;
   Array.prototype.forEach.call($('tabs').querySelectorAll('.tab'),function(b){
     b.addEventListener('click',function(){
@@ -366,22 +460,25 @@ function renderTabs(){
       else if(t==='lot'){sel={t:'lot',id:+b.getAttribute('data-id')};showTrie=false;}
       else if(t==='new'){sel={t:'new'};showTrie=false;}
       else{showTrie=true;sel=null;}
+      if(t!=='home')setPanelMin(false);
       renderMap();renderTabs();renderPanel();
     });
   });
 }
 
-/* ============ panneau ============ */
 function segsTxt(st){return st.segs.map(function(s){return 'Aire '+s.air+' (col. '+s.k1+'–'+s.k2+')';}).join(' · ')||'aucun morceau';}
 function chipsHtml(cur){
   var h='';
   state.lots.forEach(function(l){
     h+='<button class="chip'+(l.id===cur?' on':'')+'" data-lot="'+l.id+'" style="background:'+lotCol(l.id)+'">'+esc(lotShort(l))+'</button>';
   });
-  h+='<button class="chip" data-lot="new">＋ Lot</button>';
+  h+='<button class="chip" data-lot="new">'+ic('plus',11)+' Lot</button>';
   return h;
 }
-function noticeHtml(){return (storageKo?'<div class="notice">⚠️ Impossible d’enregistrer sur ce téléphone (navigation privée ?) : tes saisies seront perdues à la fermeture. Ouvre la page dans un navigateur normal.</div>':'')+(notice?'<div class="notice">'+esc(notice)+'</div>':'');}
+function noticeHtml(){
+  return (storageKo?'<div class="notice ko">'+ic('warn',14)+'<span>Impossible d’enregistrer sur ce téléphone (navigation privée ?) : tes saisies seraient perdues à la fermeture. Ouvre la page dans un navigateur normal, ou exporte tes données.</span></div>':'')+
+    (notice?'<div class="notice">'+ic('info',14)+'<span>'+esc(notice)+'</span></div>':'');
+}
 function lotSection(id,withClose){
   var l=lotById(id),st=lotStats(id);
   if(!l)return '';
@@ -389,9 +486,9 @@ function lotSection(id,withClose){
   var nameHtml;
   if(editName===id){
     nameHtml='<input id="editNameIn" value="'+esc(l.name||'')+'" placeholder="Nom du lot" style="flex:1;min-width:110px;text-align:left;font-weight:700">'+
-      '<button class="btnsm" id="btnNameOk">✓</button><button class="btnsm" id="btnNameNo">✕</button>';
+      '<button class="btnsm" id="btnNameOk">'+ic('check',12)+'</button><button class="btnsm" id="btnNameNo">'+ic('close',12)+'</button>';
   }else{
-    nameHtml=esc(lotName(l))+'<button class="btnsm" id="btnRename">✏️</button><button class="btnsm'+(arm==='lot:'+id?' danger':'')+'" id="btnDelLot">'+(arm==='lot:'+id?'Confirmer ✗':'🗑')+'</button>';
+    nameHtml=esc(lotName(l))+'<button class="btnsm" id="btnRename">'+ic('pen',12)+'</button><button class="btnsm'+(arm==='lot:'+id?' danger':'')+'" id="btnDelLot">'+(arm==='lot:'+id?'Confirmer':ic('trash',12))+'</button>';
   }
   var cards='',max=0;
   state.feeds.forEach(function(f){max=Math.max(max,lotTot(l,f.id),feedVal(l,f.id));});
@@ -399,35 +496,35 @@ function lotSection(id,withClose){
     var r=feedVal(l,f.id),t=lotTot(l,f.id),pp=perPlace(l,f.id)*1000;
     var w=max>0?Math.max(2,Math.round(Math.max(t,r)/max*100)):0;
     cards+='<div class="fcard" style="background:'+colFeed(f.id)+'1e">'+
-      '<div class="fc-top"><span class="fc-emoji">'+feedEmoji(f.name)+'</span><span class="fc-name">'+esc(f.name)+'</span><span class="su" id="fp_'+f.id+'">'+(pp>0.5?'≈ '+Math.round(pp)+' g/pl':'—')+'</span></div>'+
+      '<div class="fc-top"><span class="dot" style="background:'+colFeed(f.id)+'"></span><span class="fc-name">'+esc(f.name)+'</span><span class="su" id="fp_'+f.id+'">'+(pp>0.5?'≈ '+Math.round(pp)+' g/pl':'—')+'</span></div>'+
       '<div class="fc-bar"><div class="fc-fill" id="fbar_'+f.id+'" style="background:'+colFeed(f.id)+';width:'+w+'%"></div></div>'+
       '<div class="fc-row"><input class="short" id="fg_'+f.id+'" inputmode="decimal" value="'+Math.round(r*1000)+'"><span class="vv">g/brebis</span><span class="vv">↔</span><input class="short" id="ft_'+f.id+'" inputmode="decimal" value="'+fmt(t,2)+'"><span class="vv">kg lot</span></div>'+
       '</div>';
   });
-  if(!state.feeds.length)cards='<div class="vv">Aucun aliment : ajoute-en depuis l’onglet 🏠.</div>';
+  if(!state.feeds.length)cards='<div class="vv">Aucun aliment : ajoute-en depuis l’onglet Bergerie.</div>';
   var tot=(l.b||0)*sumRations(l),perAll=sumRations(l)*1000;
   return '<div class="ph"><span class="dot" style="background:'+lotCol(id)+'"></span>'+nameHtml+
-      (withClose?'<button class="closep" id="pClose">✕</button>':'')+'</div>'+
-    '<div class="row"><span class="lbl">Brebis</span><button class="step" data-step="-1">−</button><input id="inB" inputmode="numeric" value="'+l.b+'" style="width:70px"><button class="step" data-step="1">＋</button></div>'+
+      (withClose?'<button class="closep" id="pClose">'+ic('close',12)+'</button>':'')+'</div>'+
+    '<div class="row"><span class="lbl">Brebis</span><button class="step" data-step="-1">−</button><input id="inB" inputmode="numeric" value="'+l.b+'" style="width:70px"><button class="step" data-step="1">+</button></div>'+
     '<div class="row"><span class="lbl">Morceaux</span><span class="vv">'+segsTxt(st)+'</span></div>'+
     '<div class="row"><span class="lbl">Places</span><span class="vv">T1 '+st.t[0]+' · T2 '+st.t[1]+' · T3 '+st.t[2]+' · TS '+st.t[3]+' → <b>'+st.P+' places</b></span></div>'+
     '<div class="sep"></div>'+
     cards+
     '<div class="tot">Total du lot <b id="totKg">'+fmt(tot)+' kg</b><span class="su" id="totPer">'+((l.b||0)>0?'Σ ≈ '+Math.round(perAll)+' g/brebis/j':'saisis les brebis')+'</span></div>'+
     '<div class="row"><button class="act" id="btnApplyR">Appliquer ces rations à tous les lots</button></div>'+
-    '<div class="hint">Change g/brebis/j ou les kg du lot : tout se recalcule. L’onglet 🚜 dit quoi verser sur chaque tapis, place par place.</div>';
+    '<div class="hint">Modifie g/brebis ou kg du lot : tout se recalcule, l’onglet Trémies suit.</div>';
 }
 function feedsManagerHtml(){
   var h='<div class="ph">Aliments</div>';
   state.feeds.forEach(function(f){
     if(editFeed===f.id){
-      h+='<div class="fc-row" style="margin:4px 0"><span class="dot" style="background:'+colFeed(f.id)+'"></span><input id="editFeedIn" value="'+esc(f.name)+'" style="flex:1;min-width:110px;text-align:left"><button class="btnsm" id="btnFeedOk">✓</button><button class="btnsm" id="btnFeedNo">✕</button></div>';
+      h+='<div class="fc-row" style="margin:4px 0"><span class="dot" style="background:'+colFeed(f.id)+'"></span><input id="editFeedIn" value="'+esc(f.name)+'" style="flex:1;min-width:110px;text-align:left"><button class="btnsm" id="btnFeedOk">'+ic('check',12)+'</button><button class="btnsm" id="btnFeedNo">'+ic('close',12)+'</button></div>';
     }else{
-      h+='<div class="fc-row" style="margin:4px 0"><button class="chip" data-renamef="'+f.id+'" style="background:'+colFeed(f.id)+'1e">'+feedEmoji(f.name)+' '+esc(f.name)+'</button>'+
-        '<button class="btnsm'+(arm==='feed:'+f.id?' danger':'')+'" data-delf="'+f.id+'">'+(arm==='feed:'+f.id?'Confirmer ✗':'🗑')+'</button></div>';
+      h+='<div class="fc-row" style="margin:4px 0"><button class="chip" data-renamef="'+f.id+'" style="background:'+colFeed(f.id)+'1e"><span class="dot" style="background:'+colFeed(f.id)+'"></span>'+esc(f.name)+'</button>'+
+        '<button class="btnsm'+(arm==='feed:'+f.id?' danger':'')+'" data-delf="'+f.id+'">'+(arm==='feed:'+f.id?'Confirmer':ic('trash',12))+'</button></div>';
     }
   });
-  h+='<div class="fc-row" style="margin:6px 0"><input id="newFeed" placeholder="nom de l’aliment" style="width:150px;text-align:left"><button class="chip" id="btnAddFeed">＋ Aliment</button></div>';
+  h+='<div class="fc-row" style="margin:6px 0"><input id="newFeed" placeholder="nom de l’aliment" style="width:150px;text-align:left"><button class="chip" id="btnAddFeed">'+ic('plus',11)+' Aliment</button></div>';
   return h;
 }
 function createLot(name,i,j){
@@ -452,17 +549,18 @@ function renderPanel(){
       var minis='';
       state.feeds.forEach(function(f){
         var t=(l.b||0)*feedVal(l,f.id);
-        if(t>0)minis+='<span class="mini" style="background:'+colFeed(f.id)+'1e">'+feedEmoji(f.name)+' '+fmt(t,1)+' kg</span>';
+        if(t>0)minis+='<span class="mini" style="background:'+colFeed(f.id)+'1e"><span class="dot" style="background:'+colFeed(f.id)+'"></span>'+fmt(t,1)+' kg</span>';
       });
       rows+='<div class="lrow" data-lot="'+l.id+'"><span class="dot" style="background:'+lotCol(l.id)+'"></span><span class="nm">'+esc(lotName(l))+'</span>'+
-        '<span class="vv">'+((l.b||0)>0?l.b+' 🐑':'—')+'</span><span class="vv">'+st.P+' pl.</span>'+minis+'</div>';
+        '<span class="vv">'+((l.b||0)>0?l.b+' têtes':'—')+'</span><span class="vv">'+st.P+' pl.</span>'+minis+'</div>';
     });
     el.innerHTML=noticeHtml()+'<div class="ph">Lots — '+state.lots.length+'</div><div class="lotsList">'+rows+'</div>'+
-      '<div class="row big" style="margin-top:2px">'+B+' 🐑 · '+P+' places · '+fmt(T)+' kg</div>'+
+      '<div class="row big" style="margin-top:2px">'+B+' têtes · '+P+' places · '+fmt(T)+' kg</div>'+
       '<div class="sep"></div>'+feedsManagerHtml()+
-      '<div class="hint">Touche un morceau d’aire dans le dessin pour l’attribuer à un lot. <b>Appui long dans une aire</b> = barrière. Touche une barrière pour la déplacer. Touche un aliment pour le renommer.</div>';
+      '<div class="row" style="gap:8px"><button class="btnsm" id="btnExport">'+ic('dl',13)+' Exporter</button><button class="btnsm" id="btnImport">'+ic('ul',13)+' Importer</button><span class="vv" style="font-size:12.5px;color:var(--muet)">sauvegarde / autre appareil</span><input type="file" id="impFile" accept="application/json,.json" style="display:none"></div>'+
+      '<div class="hint">Touche un morceau d’aire pour l’attribuer à un lot · appui long = nouvelle barrière · glisse une barrière pour la déplacer · touche un aliment pour le renommer.</div>';
     Array.prototype.forEach.call(el.querySelectorAll('.lrow'),function(r){
-      r.addEventListener('click',function(){notice='';sel={t:'lot',id:+r.getAttribute('data-lot')};renderMap();renderTabs();renderPanel();});
+      r.addEventListener('click',function(){notice='';sel={t:'lot',id:+r.getAttribute('data-lot')};setPanelMin(false);renderMap();renderTabs();renderPanel();});
     });
     Array.prototype.forEach.call(el.querySelectorAll('[data-renamef]'),function(c){
       c.addEventListener('click',function(){editFeed=+c.getAttribute('data-renamef');renderPanel();});
@@ -498,11 +596,17 @@ function renderPanel(){
       $('newFeed').value='';
       save();renderPanel();
     });
+    var be=$('btnExport');
+    if(be)be.addEventListener('click',exportData);
+    var bi2=$('btnImport');
+    if(bi2)bi2.addEventListener('click',function(){var f=$('impFile');if(f)f.click();});
+    var fi=$('impFile');
+    if(fi)fi.addEventListener('change',function(){doImport(fi.files&&fi.files[0]);fi.value='';});
     return;
   }
   if(sel.t==='new'){
     var ctx=(sel.i!=null&&sel.j!=null)?AIRES[sel.i].lab:null;
-    el.innerHTML=noticeHtml()+'<div class="ph">Nouveau lot<button class="closep" id="pClose">✕</button></div>'+
+    el.innerHTML=noticeHtml()+'<div class="ph">Nouveau lot<button class="closep" id="pClose">'+ic('close',12)+'</button></div>'+
       '<div class="row"><input id="newLotName" placeholder="Nom du lot (facultatif)" style="flex:1;min-width:130px;text-align:left"><button class="act" id="btnCreateLot">Créer</button></div>'+
       (ctx?'<div class="vv">Sera attribué au morceau touché ('+esc(ctx)+').</div>':'<div class="hint">Crée le lot, puis touche des morceaux d’aires pour les lui attribuer.</div>');
     $('pClose').addEventListener('click',function(){sel=null;renderTabs();renderPanel();});
@@ -515,8 +619,8 @@ function renderPanel(){
     var detail = i===1||i===2 ? n+' col. × 2 côtés = '+sg.pl+' places'
       : i===0 ? n+' places au tapis 1'
       : n+' + '+sg.ts+' (TS) = '+sg.pl+' places';
-    el.innerHTML=noticeHtml()+'<div class="ph">'+AIRES[i].lab+' · col. '+k1+' à '+k2+'<button class="closep" id="pClose">✕</button></div>'+
-      '<div class="vv" style="margin:2px 0 8px">Ce morceau : '+detail+' · <button class="act" id="btnCut" style="padding:5px 10px;font-size:13px">＋ Barrière au milieu</button></div>'+
+    el.innerHTML=noticeHtml()+'<div class="ph">'+AIRES[i].lab+' · col. '+k1+' à '+k2+'<button class="closep" id="pClose">'+ic('close',12)+'</button></div>'+
+      '<div class="vv" style="margin:2px 0 8px">Ce morceau : '+detail+' · <button class="act" id="btnCut" style="padding:5px 10px;font-size:13px">+ Barrière au milieu</button></div>'+
       '<div class="row"><span class="lbl">Lot</span>'+chipsHtml(lid)+'</div><div class="sep"></div>'+lotSection(lid,false);
     $('pClose').addEventListener('click',function(){sel=null;renderMap();renderTabs();renderPanel();});
     $('btnCut').addEventListener('click',function(){addBarrier(i,j,Math.round((k1+k2)/2));});
@@ -528,7 +632,7 @@ function renderPanel(){
     var bi=sel.i,bp=sel.p,k=state.airs[bi].barriers[bp];
     var leftL=lotById(state.airs[bi].lots[bp]),rightL=lotById(state.airs[bi].lots[bp+1]);
     var gL=k-(bp===0?0:state.airs[bi].barriers[bp-1]), gR=(bp===state.airs[bi].barriers.length-1?DBL_PL:state.airs[bi].barriers[bp+1])-k;
-    el.innerHTML=noticeHtml()+'<div class="ph">Barrière — '+AIRES[bi].lab+', colonne '+k+'<button class="closep" id="pClose">✕</button></div>'+
+    el.innerHTML=noticeHtml()+'<div class="ph">Barrière — '+AIRES[bi].lab+', colonne '+k+'<button class="closep" id="pClose">'+ic('close',12)+'</button></div>'+
       '<div class="row"><button class="act" data-a="bm">◀ 1 place</button><button class="act" data-a="bp">1 place ▶</button><button class="warn" data-a="bd">Supprimer</button></div>'+
       '<div class="vv" style="margin:4px 0">Gauche : '+esc(lotShort(leftL))+' ('+gL+' pl) · Droite : '+esc(lotShort(rightL))+' ('+gR+' pl)</div>'+
       '<div class="hint">Tu peux aussi la glisser directement dans le dessin. 1 place ≈ 33 cm.</div>';
@@ -656,7 +760,7 @@ function moveBarrierLive(i,p,k){
   var lo=p===0?1:a.barriers[p-1]+1, hi=p===a.barriers.length-1?DBL_PL-1:a.barriers[p+1]-1;
   k=Math.max(lo,Math.min(hi,k));
   if(k===a.barriers[p])return;
-  a.barriers[p]=k;save();renderMap();
+  a.barriers[p]=k;save();
 }
 function delBarrier(i,p){
   var a=state.airs[i];
@@ -702,7 +806,7 @@ svg.addEventListener('pointerdown',function(e){
     gest.moved=0;gest.pc={x:e.clientX,y:e.clientY};gest.longOk=false;
     var p=toSvg(e.clientX,e.clientY);gest.pDown=p;
     var bI=hitBarrier(p);
-    if(bI){gest.mode='bar';gest.bar=bI;sel={t:'bar',i:bI.i,p:bI.p};renderMap();renderPanel();}
+    if(bI){gest.mode='bar';gest.bar=bI;sel={t:'bar',i:bI.i,p:bI.p};setPanelMin(false);renderMap();renderPanel();}
     else{
       gest.mode='pan';
       gest.timer=setTimeout(function(){
@@ -710,7 +814,7 @@ svg.addEventListener('pointerdown',function(e){
           var sg=segAt(gest.pDown);
           if(sg){
             var p2=insertBarrier(sg.i,kFromX(gest.pDown.x));
-            if(p2>=0){save();sel={t:'bar',i:sg.i,p:p2};gest.longOk=true;renderMap();renderPanel();}
+            if(p2>=0){save();sel={t:'bar',i:sg.i,p:p2};gest.longOk=true;setPanelMin(false);renderMap();renderPanel();}
           }
         }
       },600);
@@ -766,6 +870,7 @@ function endPtr(e){
         var sg=segAt(p);
         sel=sg?{t:'seg',i:sg.i,j:sg.j}:null;
       }
+      if(sel)setPanelMin(false);
       notice='';arm=null;
       renderMap();renderTabs();renderPanel();
     }
@@ -777,19 +882,25 @@ svg.addEventListener('pointercancel',endPtr);
 svg.addEventListener('wheel',function(e){e.preventDefault();zoomAt(e.clientX,e.clientY,e.deltaY>0?1.15:0.87);},{passive:false});
 
 /* ============ boutons ============ */
+$('btnReset').innerHTML=ic('reset',16);
+$('zin').innerHTML=ic('zin',16);
+$('zout').innerHTML=ic('zout',16);
+$('zfit').innerHTML=ic('fit',16);
 $('btnReset').addEventListener('click',function(){
+  var rB=$('btnReset');
   if(arm==='reset'){
-    arm=null;$('btnReset').textContent='⟲';
+    arm=null;rB.classList.remove('warn');rB.innerHTML=ic('reset',16);
     state=defaultState();sel=null;showTrie=false;notice='';
     save();renderMap();renderTabs();renderPanel();
     return;
   }
-  arm='reset';$('btnReset').textContent='⚠️';
-  setTimeout(function(){if(arm==='reset'){arm=null;var b=$('btnReset');if(b)b.textContent='⟲';}},4000);
+  arm='reset';rB.classList.add('warn');rB.innerHTML=ic('warn',16);
+  setTimeout(function(){if(arm==='reset'){arm=null;rB.classList.remove('warn');rB.innerHTML=ic('reset',16);}},4000);
 });
 $('zin').addEventListener('click',function(){var r=svg.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,0.8);});
 $('zout').addEventListener('click',function(){var r=svg.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,1.25);});
 $('zfit').addEventListener('click',fitView);
+$('pcol').addEventListener('click',function(){setPanelMin(!panelMin);});
 var lastAspect=0;
 window.addEventListener('resize',function(){
   var r=svg.getBoundingClientRect(),a=r.width/Math.max(1,r.height);
@@ -798,7 +909,15 @@ window.addEventListener('resize',function(){
 });
 
 /* ============ départ ============ */
-save();fitView();renderMap();renderTabs();renderPanel();
+save();
+fitView();
+renderMap();
+renderTabs();
+setPanelMin((window.innerWidth||920)<920);
+renderPanel();
+if(typeof navigator!=='undefined'&&navigator.serviceWorker&&typeof location!=='undefined'&&/^https:$/.test(location.protocol)){
+  try{navigator.serviceWorker.register('sw.js').catch(function(){});}catch(e){}
+}
 </script>
 </body>
 </html>
