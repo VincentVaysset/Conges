@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="fr">
 <head>
@@ -52,12 +51,14 @@
   .lotsList .lrow:active{background:#f6f1e6}
   .lrow .nm{font-weight:700}
   .su{font-size:12px;color:#9a9184;border:1px solid #d8d1c3;border-radius:6px;padding:2px 6px;margin-left:2px}
+  .trow{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #eee7d8;flex-wrap:wrap}
 </style>
 </head>
 <body>
 <header>
   <div class="hrow">
     <h1>🐑 Ma bergerie — lots &amp; rations</h1>
+    <button class="btnw" id="btnTrie" title="Réglage des trémies">🚜</button>
     <button class="btnw" id="btnReset" title="Tout remettre à zéro">⟲</button>
   </div>
 </header>
@@ -96,17 +97,32 @@ var LOT_COLS=['#a8d5b0','#f5cfa0','#a9cbe8','#f2b8cf','#e8e0a0','#c9b8e8','#9fd9
 var FEED_COLS=['#6a994e','#d9a441','#7b6cbf','#4d8fd1','#c96a5b','#3ba99c','#b5853f','#8a8f5a'];
 
 /* ============ état ============ */
-var KEY='bergerie_lots_v3';
+var KEY='bergerie_lots_v5',KEYOLD='bergerie_lots_v3';
 function defaultState(){
   return {nextLot:1,nextFeed:1,
     feeds:[{id:0,name:'Aliment'}],
-    lots:[{id:0,b:0,rt:{'0':0},name:null}],
+    lots:[{id:0,b:0,r:{},name:null}],
     airs:[0,1,2,3].map(function(){return {barriers:[],lots:[0]};})};
 }
-function loadS(){try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&s.lots&&s.airs&&s.feeds)return s;}catch(e){}return null;}
+function loadS(){
+  try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&s.lots&&s.airs&&s.feeds)return s;}catch(e){}
+  try{
+    var o=JSON.parse(localStorage.getItem(KEYOLD));
+    if(o&&o.lots&&o.airs&&o.feeds){ /* v4 (kg/place) -> v5 (kg/brebis) */
+      state=o;
+      o.lots.forEach(function(l){
+        var nr={},P=lotStats(l.id).P;
+        for(var fid in (l.rt||{})){var v=+l.rt[fid]||0;nr[fid]=(l.b>0&&P>0)?P*v/l.b:v;}
+        l.r=nr;delete l.rt;
+      });
+      save();return o;
+    }
+  }catch(e){}
+  return null;
+}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
 var state=loadS()||defaultState();
-var sel=null;
+var sel=null,showTrie=false,trieF=null;
 
 /* ============ géométrie ============ */
 function xOfK(k){return DBL_X0+DBL_LEN*k/DBL_PL;}
@@ -138,9 +154,59 @@ function lotStats(id){
   });
   return {t:t,P:t[0]+t[1]+t[2]+t[3],segs:segs};
 }
-function feedVal(l,fid){return (l.rt&&l.rt[fid])||0;}
-function setFeedVal(l,fid,v){l.rt=l.rt||{};l.rt[fid]=v;}
+function feedVal(l,fid){return (l.r&&l.r[fid])||0;}   /* kg par brebis */
+function setFeedVal(l,fid,v){l.r=l.r||{};l.r[fid]=v;}
 function sumRations(l){var s=0;state.feeds.forEach(function(f){s+=feedVal(l,f.id);});return s;}
+function lotTot(l,fid){return (l.b||0)*feedVal(l,fid);}
+function perPlace(l,fid){if(!l||!(l.b>0))return 0;var st=lotStats(l.id);if(st.P<=0)return 0;return l.b*feedVal(l,fid)/st.P;}
+function lotAt(i,k){
+  var ks=ksOf(i),ls=state.airs[i].lots;
+  for(var j=0;j<ks.length-1;j++)if(k>=ks[j]&&k<ks[j+1])return ls[j];
+  return ls[ls.length-1];
+}
+function dblRanges(t){ /* tapis t entre aires t et t+1 : bornes = union des barrières */
+  var bs=state.airs[t].barriers.concat(state.airs[t+1].barriers).filter(function(k){return k>0&&k<DBL_PL;});
+  bs=bs.filter(function(v,ix){return bs.indexOf(v)===ix;}).sort(function(a,b){return a-b;});
+  var ks=[0].concat(bs,[DBL_PL]),out=[];
+  for(var j=0;j<ks.length-1;j++){
+    var k1=ks[j],k2=ks[j+1];if(k2<=k1)continue;
+    var la=lotAt(t,k1),lb=lotAt(t+1,k1);
+    out.push({k1:k1,k2:k2,a:la,b:lb,dose:perPlace(lotById(la),trieF)+perPlace(lotById(lb),trieF)});
+  }
+  return out;
+}
+function tsRanges(){
+  var out=[];
+  segsOf(3).forEach(function(sg){
+    var c1=cumT(sg.k1),c2=sg.isLast?TS_PL:cumT(sg.k2);
+    if(c2<=c1)return;
+    out.push({k1:c1,k2:c2,a:sg.lot,b:null,dose:perPlace(lotById(sg.lot),trieF)});
+  });
+  return out;
+}
+function trieHtml(){
+  var head='<div class="ph">🚜 Réglage des trémies<button class="closep" id="pCloseTrie">✕</button></div>';
+  if(!state.feeds.length)return head+'<div class="vv">Aucun aliment : ajoute-en dans le résumé.</div>';
+  if(!state.feeds.some(function(f){return f.id===trieF;}))trieF=state.feeds[0].id;
+  var chips='';state.feeds.forEach(function(f){chips+='<button class="chip'+(f.id===trieF?' on':'')+'" data-f="'+f.id+'" style="background:'+colFeed(f.id)+'1e">'+feedEmoji(f.name)+' '+esc(f.name)+'</button>';});
+  var names=['Tapis double 1','Tapis double 2','Tapis double 3','Tapis simple'];
+  var cards='',grand=0;
+  for(var t=0;t<4;t++){
+    var rs=(t<3?dblRanges(t):tsRanges()).filter(function(r){return r.dose>0;});
+    var tot=0;rs.forEach(function(r){tot+=(r.k2-r.k1)*r.dose;});
+    grand+=tot;
+    var lines=rs.map(function(r){
+      var same=r.b!=null&&r.b===r.a;
+      var who=lotShort(lotById(r.a))+((r.b==null||same)?'':' + '+lotShort(lotById(r.b)));
+      var dots='<span class="dot" style="background:'+lotCol(r.a)+'"></span>'+((r.b==null||same)?'':'<span class="dot" style="background:'+lotCol(r.b)+'"></span>');
+      return '<div class="trow">'+dots+'<span class="vv" style="flex:1">places <b>'+(r.k1+1)+'–'+r.k2+'</b> <span class="su">'+esc(who)+'</span></span><b>'+Math.round(r.dose*1000)+' g</b><span class="su">'+fmt(r.dose,2)+' kg</span></div>';
+    }).join('');
+    cards+='<div class="fcard" style="background:#fff"><div class="fc-top"><span class="fc-name">'+names[t]+'</span><span class="su">'+fmt(tot,1)+' kg</span></div>'+(lines||'<div class="vv">rien à verser</div>')+'</div>';
+  }
+  return head+'<div class="row">'+chips+'</div>'+cards+
+    '<div class="tot">À verser au total <b>'+fmt(grand)+' kg</b></div>'+
+    '<div class="hint">Places numérotées de 1 (à gauche). Tapis double : 1 emplacement = 2 places face à face → on additionne les rations des 2 lots. La dose suit les g/brebis saisis par lot : en moyenne, chaque lot mange sa ration.</div>';
+}
 function feedEmoji(name){
   var n=(name||'').toLowerCase();
   if(/blé|blé |orge|avoine|tritic|céré|cereal/.test(n))return '🌾';
@@ -243,18 +309,18 @@ function lotSection(id,withClose){
   if(!l)return '';
   l.b=l.b||0;
   var cards='',max=0;
-  state.feeds.forEach(function(f){max=Math.max(max,st.P*feedVal(l,f.id));});
+  state.feeds.forEach(function(f){max=Math.max(max,lotTot(l,f.id),feedVal(l,f.id));});
   state.feeds.forEach(function(f){
-    var r=feedVal(l,f.id),t=st.P*r,per=l.b>0?t/l.b:null;
-    var w=max>0?Math.max(2,Math.round(t/max*100)):0;
+    var r=feedVal(l,f.id),t=lotTot(l,f.id),pp=perPlace(l,f.id)*1000;
+    var w=max>0?Math.max(2,Math.round(Math.max(t,r)/max*100)):0;
     cards+='<div class="fcard" style="background:'+colFeed(f.id)+'1e">'+
-      '<div class="fc-top"><span class="fc-emoji">'+feedEmoji(f.name)+'</span><span class="fc-name">'+esc(f.name)+'</span><span class="su" id="fp_'+f.id+'">'+(per==null?'—':Math.round(per*1000)+' g/brebis')+'</span></div>'+
+      '<div class="fc-top"><span class="fc-emoji">'+feedEmoji(f.name)+'</span><span class="fc-name">'+esc(f.name)+'</span><span class="su" id="fp_'+f.id+'">'+(pp>0.5?'≈ '+Math.round(pp)+' g/pl':'—')+'</span></div>'+
       '<div class="fc-bar"><div class="fc-fill" id="fbar_'+f.id+'" style="background:'+colFeed(f.id)+';width:'+w+'%"></div></div>'+
-      '<div class="fc-row"><input class="short" id="fr_'+f.id+'" inputmode="decimal" value="'+fmt(r,3)+'"><span class="vv">kg/pl</span><span class="vv">↔</span><input class="short" id="ft_'+f.id+'" inputmode="decimal" value="'+fmt(t,2)+'"><span class="vv">kg</span></div>'+
+      '<div class="fc-row"><input class="short" id="fg_'+f.id+'" inputmode="decimal" value="'+Math.round(r*1000)+'"><span class="vv">g/brebis</span><span class="vv">↔</span><input class="short" id="ft_'+f.id+'" inputmode="decimal" value="'+fmt(t,2)+'"><span class="vv">kg lot</span></div>'+
       '</div>';
   });
   if(!state.feeds.length)cards='<div class="vv">Aucun aliment : ajoute-en dans le résumé.</div>';
-  var tot=st.P*sumRations(l),perAll=l.b>0?tot/l.b:null;
+  var tot=(l.b||0)*sumRations(l),perAll=sumRations(l)*1000;
   return '<div class="ph"><span class="dot" style="background:'+lotCol(id)+'"></span>'+esc(lotName(l))+
       '<button class="btnsm" id="btnRename">✏️</button><button class="btnsm" id="btnDelLot">🗑</button>'+
       (withClose?'<button class="closep" id="pClose">✕</button>':'')+'</div>'+
@@ -263,9 +329,9 @@ function lotSection(id,withClose){
     '<div class="row"><span class="lbl">Places</span><span class="vv">T1 '+st.t[0]+' · T2 '+st.t[1]+' · T3 '+st.t[2]+' · TS '+st.t[3]+' → <b>'+st.P+' places</b></span></div>'+
     '<div class="sep"></div>'+
     cards+
-    '<div class="tot">Total du lot <b id="totKg">'+fmt(tot)+' kg</b><span class="su" id="totPer">'+(perAll==null?'saisis les brebis':'≈ '+Math.round(perAll*1000)+' g / brebis')+'</span></div>'+
+    '<div class="tot">Total du lot <b id="totKg">'+fmt(tot)+' kg</b><span class="su" id="totPer">'+((l.b||0)>0?'Σ ≈ '+Math.round(perAll)+' g/brebis':'saisis les brebis')+'</span></div>'+
     '<div class="row"><button class="act" id="btnApplyR">Appliquer ces rations à tous les lots</button></div>'+
-    '<div class="hint">Change kg/place ou les kg du lot : tout se recalcule (barres et g/brebis).</div>';
+    '<div class="hint">Change g/brebis ou les kg du lot : tout se recalcule. Le bouton 🚜 te dit quoi verser sur chaque tapis, place par place.</div>';
 }
 function feedsManagerHtml(){
   var h='<div class="ph">Aliments</div>';
@@ -279,13 +345,21 @@ function feedsManagerHtml(){
 }
 function renderPanel(){
   var el=$('panel');
+  if(showTrie){
+    el.innerHTML=trieHtml();
+    Array.prototype.forEach.call(el.querySelectorAll('.chip[data-f]'),function(c){
+      c.addEventListener('click',function(){trieF=+c.getAttribute('data-f');renderPanel();});
+    });
+    var ct=$('pCloseTrie');if(ct)ct.addEventListener('click',function(){showTrie=false;renderPanel();});
+    return;
+  }
   if(!sel){
     var rows='',B=0,T=0,P=0;
     state.lots.forEach(function(l){
-      var st=lotStats(l.id);B+=l.b||0;P+=st.P;T+=st.P*sumRations(l);
+      var st=lotStats(l.id);B+=l.b||0;P+=st.P;T+=(l.b||0)*sumRations(l);
       var minis='';
       state.feeds.forEach(function(f){
-        var t=st.P*feedVal(l,f.id);
+        var t=(l.b||0)*feedVal(l,f.id);
         if(t>0)minis+='<span class="mini" style="background:'+colFeed(f.id)+'1e">'+feedEmoji(f.name)+' '+fmt(t,1)+' kg</span>';
       });
       rows+='<div class="lrow" data-lot="'+l.id+'"><span class="dot" style="background:'+lotCol(l.id)+'"></span><span class="nm">'+esc(lotName(l))+'</span>'+
@@ -295,14 +369,14 @@ function renderPanel(){
       '<div class="row" style="margin:4px 0"><button class="act" id="btnNewLot">＋ Nouveau lot</button></div>'+
       '<div class="row big" style="margin-top:2px">'+B+' 🐑 · '+P+' places · '+fmt(T)+' kg</div>'+
       '<div class="sep"></div>'+feedsManagerHtml()+
-      '<div class="hint">Touche un morceau d’aire pour choisir son lot et saisir les brebis. <b>Appui long dans une aire</b> = barrière. Touche une barrière pour la déplacer. Touche un aliment pour le renommer.</div>';
+      '<div class="hint">Touche un morceau d’aire pour choisir son lot et saisir les brebis. <b>Appui long dans une aire</b> = barrière. Touche une barrière pour la déplacer. Touche un aliment pour le renommer. 🚜 = quoi verser sur chaque tapis, place par place.</div>';
     Array.prototype.forEach.call(el.querySelectorAll('.lrow'),function(r){
       r.addEventListener('click',function(){sel={t:'lot',id:+r.getAttribute('data-lot')};renderMap();renderPanel();});
     });
     $('btnNewLot').addEventListener('click',function(){
       var n=prompt('Nom du lot ? (ex. Agnelles — facultatif)','');
       if(n===null)return;
-      state.lots.push({id:state.nextLot++,b:0,rt:{},name:n.trim()||null});
+      state.lots.push({id:state.nextLot++,b:0,r:{},name:n.trim()||null});
       save();renderPanel();
     });
     Array.prototype.forEach.call(el.querySelectorAll('[data-rename]'),function(c){
@@ -319,7 +393,7 @@ function renderPanel(){
         state.feeds.forEach(function(x){if(x.id===id)f=x;});
         if(!confirm('Supprimer « '+(f?f.name:'')+' » ? Les rations de cet aliment seront effacées.'))return;
         state.feeds=state.feeds.filter(function(x){return x.id!==id;});
-        state.lots.forEach(function(l){if(l.rt)delete l.rt[id];});
+        state.lots.forEach(function(l){if(l.r)delete l.r[id];});
         save();renderPanel();
       });
     });
@@ -378,7 +452,7 @@ function bindChips(i,j){
         if(nm===null)return;
         var cur=lotById(state.airs[i].lots[j]);
         var id=state.nextLot++;
-        state.lots.push({id:id,b:0,rt:cur?JSON.parse(JSON.stringify(cur.rt||{})):{},name:nm.trim()||null});
+        state.lots.push({id:id,b:0,r:cur?JSON.parse(JSON.stringify(cur.r||{})):{},name:nm.trim()||null});
         state.airs[i].lots[j]=id;
       } else state.airs[i].lots[j]=+v;
       save();
@@ -392,34 +466,34 @@ function bindLot(id){
   function refresh(kind,fid){
     state.feeds.forEach(function(f){
       var r=feedVal(l,f.id);
-      if(!(kind==='fr'&&f.id===fid)&&$('fr_'+f.id))$('fr_'+f.id).value=fmt(r,3);
-      if(!(kind==='ft'&&f.id===fid)&&$('ft_'+f.id))$('ft_'+f.id).value=fmt(st.P*r,2);
-      var per=l.b>0?st.P*r/l.b*1000:null;
-      if($('fp_'+f.id))$('fp_'+f.id).textContent=per==null?'—':Math.round(per)+' g/brebis';
+      if(!(kind==='fg'&&f.id===fid)&&$('fg_'+f.id))$('fg_'+f.id).value=Math.round(r*1000);
+      if(!(kind==='ft'&&f.id===fid)&&$('ft_'+f.id))$('ft_'+f.id).value=fmt((l.b||0)*r,2);
+      var pp=perPlace(l,f.id)*1000;
+      if($('fp_'+f.id))$('fp_'+f.id).textContent=pp>0.5?'≈ '+Math.round(pp)+' g/pl':'—';
     });
-    var max=0;state.feeds.forEach(function(f){max=Math.max(max,st.P*feedVal(l,f.id));});
+    var max=0;state.feeds.forEach(function(f){max=Math.max(max,lotTot(l,f.id),feedVal(l,f.id));});
     state.feeds.forEach(function(f){
-      var t=st.P*feedVal(l,f.id);
-      if($('fbar_'+f.id))$('fbar_'+f.id).style.width=(max>0?Math.max(2,Math.round(t/max*100)):0)+'%';
+      var w=max>0?Math.max(2,Math.round(Math.max(lotTot(l,f.id),feedVal(l,f.id))/max*100)):0;
+      if($('fbar_'+f.id))$('fbar_'+f.id).style.width=w+'%';
     });
-    var tot=st.P*sumRations(l);
+    var tot=(l.b||0)*sumRations(l);
     if($('totKg'))$('totKg').textContent=fmt(tot)+' kg';
-    if($('totPer'))$('totPer').textContent=l.b>0?'≈ '+Math.round(tot/l.b*1000)+' g / brebis':'saisis les brebis';
+    if($('totPer'))$('totPer').textContent=l.b>0?'Σ ≈ '+Math.round(sumRations(l)*1000)+' g/brebis':'saisis les brebis';
     renderMap();save();
   }
   inB.addEventListener('input',function(){l.b=Math.max(0,Math.round(pnum(inB.value)));refresh();});
   state.feeds.forEach(function(f){
-    var fr=$('fr_'+f.id),ft=$('ft_'+f.id);
-    if(!fr)return;
-    fr.addEventListener('input',function(){setFeedVal(l,f.id,Math.max(0,pnum(fr.value)));refresh('fr',f.id);});
-    ft.addEventListener('input',function(){setFeedVal(l,f.id,st.P>0?Math.max(0,pnum(ft.value))/st.P:0);refresh('ft',f.id);});
+    var fg=$('fg_'+f.id),ft=$('ft_'+f.id);
+    if(!fg)return;
+    fg.addEventListener('input',function(){setFeedVal(l,f.id,Math.max(0,pnum(fg.value))/1000);refresh('fg',f.id);});
+    ft.addEventListener('input',function(){if(l.b>0)setFeedVal(l,f.id,Math.max(0,pnum(ft.value))/l.b);refresh('ft',f.id);});
   });
   Array.prototype.forEach.call($('panel').querySelectorAll('.step'),function(bt){
     bt.addEventListener('click',function(){l.b=Math.max(0,l.b+parseInt(bt.getAttribute('data-step'),10));inB.value=l.b;refresh();});
   });
   var ba=$('btnApplyR');
   if(ba)ba.addEventListener('click',function(){
-    state.lots.forEach(function(x){if(x.id!==l.id)x.rt=JSON.parse(JSON.stringify(l.rt||{}));});
+    state.lots.forEach(function(x){if(x.id!==l.id)x.r=JSON.parse(JSON.stringify(l.r||{}));});
     save();renderPanel();
   });
   var br=$('btnRename');
@@ -434,7 +508,7 @@ function bindLot(id){
     if(stt.segs.length){alert('Ce lot a encore '+stt.segs.length+' morceau(x) : attribue-les à un autre lot avant de le supprimer.');return;}
     if(!confirm('Supprimer « '+lotName(l)+' » ?'))return;
     state.lots=state.lots.filter(function(x){return x.id!==id;});
-    if(!state.lots.length)state.lots=[{id:state.nextLot++,b:0,rt:{}}];
+    if(!state.lots.length)state.lots=[{id:state.nextLot++,b:0,r:{}}];
     sel=null;save();renderMap();renderPanel();
   });
 }
@@ -593,6 +667,7 @@ svg.addEventListener('pointercancel',endPtr);
 svg.addEventListener('wheel',function(e){e.preventDefault();zoomAt(e.clientX,e.clientY,e.deltaY>0?1.15:0.87);},{passive:false});
 
 /* ============ boutons ============ */
+$('btnTrie').addEventListener('click',function(){showTrie=!showTrie;renderPanel();});
 $('btnReset').addEventListener('click',function(){
   if(confirm('Tout remettre à zéro ? (barrières, lots, brebis, rations)')){
     state=defaultState();sel=null;save();renderMap();renderPanel();
