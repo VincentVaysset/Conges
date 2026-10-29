@@ -1,18 +1,28 @@
-# 🐑 Ma bergerie — lots & rations
+# Ma bergerie — lots & rations
 
-Plan interactif de la bergerie (35 m × 22 m) : aires, tapis, barrières positionnables, lots et rations.
+Plan interactif de la bergerie (35 m × 22 m) : aires, tapis, barrières, lots et rations, et réglage des trémies place par place. Aucune donnée envoyée : tout reste sur l’appareil.
 
-**🔗 Ouvrir : <https://vincentvaysset.github.io/Conges/bergerie/>**
+**Ouvrir : <https://vincentvaysset.github.io/Conges/bergerie/>**
 
-## Comment ça marche
+## Le dessin
+- Les 4 aires font toute la longueur ; les 3 tapis doubles (92 places/côté) et le tapis simple (102 places) sont alignés à gauche, avec règle graduée.
+- Touche un morceau d’aire pour l’attribuer à un lot · appui long = nouvelle barrière · glisse une barrière pour la déplacer.
+- Panneau repliable (« Détails / Masquer ») pour agrandir le plan ; sur grand écran, le panneau passe sur le côté.
 
-- **Onglets** : 🏠 Bergerie (résumé + gestion des aliments), un onglet par lot, ＋ Lot, 🚜 Trémies.
-- Touche un morceau d'aire dans le dessin pour l'attribuer à un lot ; **appui long** dans une aire = nouvelle barrière (déplaçable au doigt ou ±1 place, 1 place ≈ 33 cm, graduation en places le long des tapis, colonne affichée pendant le déplacement).
-- Chaque lot : nombre de brebis, rations par aliment en **g/brebis/j ↔ kg/lot** (tout se recalcule dans les 2 sens), total du lot.
-- Onglet **🚜 Trémies** : pour chaque tapis et chaque plage de places, la dose à régler **par aliment** (tous les aliments affichés en même temps), plus le total à verser. Sur un tapis double, la trémie verse au milieu en une seule fois : quand 2 lots se font face, une seule **ration commune** (la dose par place additionne leurs besoins des 2 côtés). En bas, **contrôle par lot** : total versé au lot sur toutes ses places ÷ son effectif = sa ration g/j.
-- Dans le dessin, chaque aire affiche le nom du lot, le nombre de brebis 🐑 et la ration en g/j.
-- Toutes les saisies se font dans la page (aucune fenêtre du navigateur) ; les suppressions demandent une 2ᵉ touche de confirmation.
-- Données sauvegardées automatiquement sur l'appareil, compatibles avec les versions précédentes ; si l'enregistrement est impossible, un bandeau rouge s'affiche.
-- Bouton ⟲ dans l'en-tête : remise à zéro en 2 touches.
+## Lots & aliments
+- Effectif, nom, rations g/brebis ↔ kg du lot liés ; barres et totaux par aliment ; « Appliquer ces rations à tous les lots ».
+- Aliments nommables, une couleur par aliment.
 
-Utilisable sur téléphone ; fonctionne hors-ligne une fois la page chargée.
+## Onglet Trémies
+- Pour chaque tapis et chaque plage de places : la dose à régler par aliment, plus le total à verser.
+- La trémie verse au milieu du tapis : une seule ration pour les 2 rangées. « 2 × » la part du lot quand il est seul des 2 côtés ; somme des parts des 2 lots (affichées) quand 2 lots se partagent le tapis.
+- Contrôle par lot : total versé au lot sur toutes ses places ÷ son effectif = sa ration g/j.
+
+## Données
+- Enregistrement automatique sur l’appareil, avec contrôle : avertissement si le navigateur refuse d’enregistrer.
+- Exporter / Importer un fichier de sauvegarde (onglet Bergerie) : sécurité et passage vers un autre appareil.
+
+## Installer l’application
+- Android / Chrome : menu ⋮ → « Ajouter à l’écran d’accueil ».
+- iPhone / iPad : Safari → Partager → « Sur l’écran d’accueil ».
+- L’application s’ouvre en plein écran et fonctionne hors ligne.
