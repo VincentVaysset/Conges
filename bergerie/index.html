@@ -133,7 +133,7 @@ function save(){
   catch(e){storageKo=true;}
 }
 var state=loadS()||defaultState();
-var sel=null,showTrie=false,trieF=null,editName=null,editFeed=null,arm=null,notice='';
+var sel=null,showTrie=false,editName=null,editFeed=null,arm=null,notice='';
 
 /* ============ géométrie ============ */
 function xOfK(k){return DBL_X0+DBL_LEN*k/DBL_PL;}
@@ -175,14 +175,15 @@ function lotAt(i,k){
   for(var j=0;j<ks.length-1;j++)if(k>=ks[j]&&k<ks[j+1])return ls[j];
   return ls[ls.length-1];
 }
-function dblRanges(t){ /* tapis t entre aires t et t+1 : bornes = union des barrières */
+function dblRanges(t){ /* tapis t entre aires t et t+1 : bornes = union des barrières ; doses par aliment */
   var bs=state.airs[t].barriers.concat(state.airs[t+1].barriers).filter(function(k){return k>0&&k<DBL_PL;});
   bs=bs.filter(function(v,ix){return bs.indexOf(v)===ix;}).sort(function(a,b){return a-b;});
   var ks=[0].concat(bs,[DBL_PL]),out=[];
   for(var j=0;j<ks.length-1;j++){
     var k1=ks[j],k2=ks[j+1];if(k2<=k1)continue;
-    var la=lotAt(t,k1),lb=lotAt(t+1,k1);
-    out.push({k1:k1,k2:k2,a:la,b:lb,dose:perPlace(lotById(la),trieF)+perPlace(lotById(lb),trieF)});
+    var la=lotAt(t,k1),lb=lotAt(t+1,k1),doses={},tot=0;
+    state.feeds.forEach(function(f){var d=perPlace(lotById(la),f.id)+perPlace(lotById(lb),f.id);doses[f.id]=d;tot+=d;});
+    out.push({k1:k1,k2:k2,a:la,b:lb,doses:doses,tot:tot});
   }
   return out;
 }
@@ -191,35 +192,42 @@ function tsRanges(){
   segsOf(3).forEach(function(sg){
     var c1=cumT(sg.k1),c2=sg.isLast?TS_PL:cumT(sg.k2);
     if(c2<=c1)return;
-    out.push({k1:c1,k2:c2,a:sg.lot,b:null,dose:perPlace(lotById(sg.lot),trieF)});
+    var doses={},tot=0;
+    state.feeds.forEach(function(f){var d=perPlace(lotById(sg.lot),f.id);doses[f.id]=d;tot+=d;});
+    out.push({k1:c1,k2:c2,a:sg.lot,b:null,doses:doses,tot:tot});
   });
   return out;
 }
 function trieHtml(){
   var head='<div class="ph">🚜 Réglage des trémies<button class="closep" id="pCloseTrie">✕</button></div>';
   if(!state.feeds.length)return head+'<div class="vv">Aucun aliment : ajoute-en depuis l’onglet 🏠.</div>';
-  if(!state.feeds.some(function(f){return f.id===trieF;}))trieF=state.feeds[0].id;
-  var chips='';state.feeds.forEach(function(f){chips+='<button class="chip'+(f.id===trieF?' on':'')+'" data-f="'+f.id+'" style="background:'+colFeed(f.id)+'1e">'+feedEmoji(f.name)+' '+esc(f.name)+'</button>';});
   var names=['Tapis double 1','Tapis double 2','Tapis double 3','Tapis simple'];
   var cards='',grand=0;
   for(var t=0;t<4;t++){
-    var rs=(t<3?dblRanges(t):tsRanges()).filter(function(r){return r.dose>0;});
-    var tot=0;rs.forEach(function(r){tot+=(r.k2-r.k1)*r.dose;});
+    var rs=(t<3?dblRanges(t):tsRanges()).filter(function(r){return r.tot>0;});
+    var tot=0;rs.forEach(function(r){tot+=(r.k2-r.k1)*r.tot;});
     grand+=tot;
-    var lines=rs.map(function(r){
+    var lines='';
+    rs.forEach(function(r){
       var same=r.b!=null&&r.b===r.a;
-      var pa=Math.round(perPlace(lotById(r.a),trieF)*1000);
-      var pb=(r.b==null)?0:Math.round(perPlace(lotById(r.b),trieF)*1000);
       var who=lotShort(lotById(r.a))+((r.b==null)?'':(same?' des 2 côtés':' + '+lotShort(lotById(r.b))));
       var dots='<span class="dot" style="background:'+lotCol(r.a)+'"></span>'+((r.b==null)?'':'<span class="dot" style="background:'+lotCol(r.b)+'"></span>');
-      var split=(same?'<span class="su">2 × '+pa+' g</span>':((pb>0)?('<span class="su">'+pa+' + '+pb+' g</span>'):''));
-      return '<div class="trow">'+dots+'<span class="vv" style="flex:1">places <b>'+(r.k1+1)+'–'+r.k2+'</b> <span class="su">'+esc(who)+'</span></span>'+split+'<b>'+Math.round(r.dose*1000)+' g/place</b></div>';
-    }).join('');
-    cards+='<div class="fcard" style="background:#fff"><div class="fc-top"><span class="fc-name">'+names[t]+'</span><span class="su">total '+fmt(tot,1)+' kg</span></div>'+(lines||'<div class="vv">rien à verser</div>')+'</div>';
+      var fed=state.feeds.filter(function(f){return (r.doses[f.id]||0)>0.0005;});
+      function feedLine(f,compact){
+        var pa=Math.round(perPlace(lotById(r.a),f.id)*1000);
+        var pb=(r.b==null)?0:Math.round(perPlace(lotById(r.b),f.id)*1000);
+        var split=(same?'<span class="su">2 × '+pa+' g</span>':((pb>0)?('<span class="su">'+pa+' + '+pb+' g</span>'):''));
+        var nm='<span class="fc-emoji">'+feedEmoji(f.name)+'</span> '+esc(f.name);
+        if(compact)return '<div class="trow">'+dots+'<span class="vv" style="flex:1">places <b>'+(r.k1+1)+'–'+r.k2+'</b> <span class="su">'+esc(who)+'</span> '+nm+'</span>'+split+'<b>'+Math.round(r.doses[f.id]*1000)+' g/place</b></div>';
+        return '<div class="trow" style="padding-left:24px"><span class="vv" style="flex:1">'+nm+'</span>'+split+'<b>'+Math.round(r.doses[f.id]*1000)+' g/place</b></div>';
+      }
+      lines+=(fed.length===1)?feedLine(fed[0],true):('<div class="trow">'+dots+'<span class="vv" style="flex:1">places <b>'+(r.k1+1)+'–'+r.k2+'</b> <span class="su">'+esc(who)+'</span></span></div>'+fed.map(function(f){return feedLine(f,false);}).join(''));
+    });
+    cards+='<div class="fcard" style="background:#fff"><div class="fc-top"><span class="fc-name">'+names[t]+'</span><span class="su">total '+fmt(tot,1)+' kg</span></div>'+((lines)||'<div class="vv">rien à verser</div>')+'</div>';
   }
-  return head+'<div class="row">'+chips+'</div>'+cards+
+  return head+cards+
     '<div class="tot">À verser au total <b>'+fmt(grand)+' kg</b></div>'+
-    '<div class="hint">Places numérotées de 1 (à gauche). Sur un tapis double, chaque emplacement nourrit 2 brebis (une de chaque côté) : la dose additionne les 2 côtés — doublée si ton lot est seul des 2 côtés. En moyenne, chaque brebis mange bien sa ration g/j.</div>';
+    '<div class="hint">Places numérotées de 1 (à gauche). Chaque aliment a sa propre dose par place, à régler denrée par denrée. Sur un tapis double, chaque emplacement nourrit 2 brebis (une de chaque côté) : chaque dose additionne les 2 côtés. En moyenne, chaque brebis mange bien sa ration g/j.</div>';
 }
 function feedEmoji(name){
   var n=(name||'').toLowerCase();
@@ -418,9 +426,6 @@ function renderPanel(){
   var el=$('panel');
   if(showTrie){
     el.innerHTML=noticeHtml()+trieHtml();
-    Array.prototype.forEach.call(el.querySelectorAll('.chip[data-f]'),function(c){
-      c.addEventListener('click',function(){trieF=+c.getAttribute('data-f');renderPanel();});
-    });
     var ct=$('pCloseTrie');if(ct)ct.addEventListener('click',function(){showTrie=false;sel=null;renderTabs();renderPanel();});
     return;
   }
@@ -759,7 +764,7 @@ svg.addEventListener('wheel',function(e){e.preventDefault();zoomAt(e.clientX,e.c
 $('btnReset').addEventListener('click',function(){
   if(arm==='reset'){
     arm=null;$('btnReset').textContent='⟲';
-    state=defaultState();sel=null;showTrie=false;notice='';trieF=null;
+    state=defaultState();sel=null;showTrie=false;notice='';
     save();renderMap();renderTabs();renderPanel();
     return;
   }
