@@ -127,7 +127,11 @@ function loadS(){
   }catch(e){}
   return null;
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+var storageKo=false;
+function save(){
+  try{var s=JSON.stringify(state);localStorage.setItem(KEY,s);storageKo=(localStorage.getItem(KEY)!==s);}
+  catch(e){storageKo=true;}
+}
 var state=loadS()||defaultState();
 var sel=null,showTrie=false,trieF=null,editName=null,editFeed=null,arm=null,notice='';
 
@@ -291,15 +295,28 @@ function renderMap(){
   AIRES.forEach(function(b){
     o.push('<text x="0.45" y="'+(b.y+0.85)+'" font-size="0.75" fill="#9a8f7c" paint-order="stroke" stroke="#ffffff" stroke-width="0.1" stroke-opacity="0.75">'+b.lab+'</text>');
   });
-  TAPIS.forEach(function(b){
-    o.push('<text x="0.4" y="'+(b.y+b.h/2+0.18)+'" font-size="0.5" fill="#4f6b4a" paint-order="stroke" stroke="#ffffff" stroke-width="0.1" stroke-opacity="0.75">'+b.lab+'</text>');
+  TAPIS.forEach(function(b,tix){
+    o.push('<text x="0.4" y="'+(b.y+0.28)+'" font-size="0.44" fill="#4f6b4a" paint-order="stroke" stroke="#ffffff" stroke-width="0.1" stroke-opacity="0.75">'+b.lab+'</text>');
+    var maxK=(tix===3?TS_PL:DBL_PL);
+    for(var kk=10;kk<maxK;kk+=10){
+      var tx=xOfK(kk);
+      o.push('<line x1="'+tx+'" y1="'+(b.y+0.38)+'" x2="'+tx+'" y2="'+(b.y+0.66)+'" stroke="#a3b89f" stroke-width="0.045"/>');
+      o.push('<text x="'+tx+'" y="'+(b.y+0.64)+'" font-size="0.36" fill="#54704f" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="0.08" stroke-opacity="0.8">'+kk+'</text>');
+    }
+    o.push('<text x="'+(b.x1-0.15)+'" y="'+(b.y+0.64)+'" font-size="0.36" font-weight="700" fill="#54704f" text-anchor="end" paint-order="stroke" stroke="#ffffff" stroke-width="0.08" stroke-opacity="0.8">'+maxK+'</text>');
   });
   AIRES.forEach(function(b,i){
-    state.airs[i].barriers.forEach(function(k,p){
-      var x=xOfK(k),isSel=sel&&sel.t==='bar'&&sel.i===i&&sel.p===p,sc=isSel?'#e3812f':'#a34e37';
+    var ab=state.airs[i];
+    ab.barriers.forEach(function(k,p){
+      var drag=(gest&&gest.mode==='bar'&&gest.bar&&gest.bar.i===i&&gest.bar.p===p);
+      var x=xOfK(k),isSel=(sel&&sel.t==='bar'&&sel.i===i&&sel.p===p)||drag,sc=isSel?'#e3812f':'#a34e37';
       o.push('<line x1="'+x+'" y1="'+b.y+'" x2="'+x+'" y2="'+(b.y+b.h)+'" stroke="'+sc+'" stroke-width="'+(isSel?0.3:0.2)+'" stroke-dasharray="0.55 0.35"/>');
       o.push('<circle cx="'+x+'" cy="'+(b.y+b.h/2)+'" r="'+(isSel?0.55:0.45)+'" fill="'+sc+'" stroke="#ffffff" stroke-width="0.09"/>');
-      if(isSel)o.push('<text x="'+x+'" y="'+(b.y+0.5)+'" font-size="0.6" font-weight="700" fill="#a34e37" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="0.12">col. '+k+'</text>');
+      if(isSel){
+        var g=k-(p===0?0:ab.barriers[p-1]), d=(p===ab.barriers.length-1?DBL_PL:ab.barriers[p+1])-k;
+        o.push('<text x="'+x+'" y="'+(b.y+0.5)+'" font-size="0.6" font-weight="700" fill="#a34e37" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="0.12">col. '+k+'</text>');
+        o.push('<text x="'+x+'" y="'+(b.y+1.15)+'" font-size="0.5" font-weight="700" fill="#a34e37" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="0.12">◀ '+g+' pl · '+d+' pl ▶</text>');
+      }
     });
   });
   o.push('<rect x="0" y="0" width="'+L+'" height="'+W+'" fill="none" stroke="#7a6f63" stroke-width="0.16"/>');
@@ -340,7 +357,7 @@ function chipsHtml(cur){
   h+='<button class="chip" data-lot="new">＋ Lot</button>';
   return h;
 }
-function noticeHtml(){return notice?'<div class="notice">'+esc(notice)+'</div>':'';}
+function noticeHtml(){return (storageKo?'<div class="notice">⚠️ Impossible d’enregistrer sur ce téléphone (navigation privée ?) : tes saisies seront perdues à la fermeture. Ouvre la page dans un navigateur normal.</div>':'')+(notice?'<div class="notice">'+esc(notice)+'</div>':'');}
 function lotSection(id,withClose){
   var l=lotById(id),st=lotStats(id);
   if(!l)return '';
@@ -489,9 +506,10 @@ function renderPanel(){
   if(sel.t==='bar'){
     var bi=sel.i,bp=sel.p,k=state.airs[bi].barriers[bp];
     var leftL=lotById(state.airs[bi].lots[bp]),rightL=lotById(state.airs[bi].lots[bp+1]);
+    var gL=k-(bp===0?0:state.airs[bi].barriers[bp-1]), gR=(bp===state.airs[bi].barriers.length-1?DBL_PL:state.airs[bi].barriers[bp+1])-k;
     el.innerHTML=noticeHtml()+'<div class="ph">Barrière — '+AIRES[bi].lab+', colonne '+k+'<button class="closep" id="pClose">✕</button></div>'+
       '<div class="row"><button class="act" data-a="bm">◀ 1 place</button><button class="act" data-a="bp">1 place ▶</button><button class="warn" data-a="bd">Supprimer</button></div>'+
-      '<div class="vv" style="margin:4px 0">Gauche : '+esc(lotShort(leftL))+' · Droite : '+esc(lotShort(rightL))+'</div>'+
+      '<div class="vv" style="margin:4px 0">Gauche : '+esc(lotShort(leftL))+' ('+gL+' pl) · Droite : '+esc(lotShort(rightL))+' ('+gR+' pl)</div>'+
       '<div class="hint">Tu peux aussi la glisser directement dans le dessin. 1 place ≈ 33 cm.</div>';
     Array.prototype.forEach.call(el.querySelectorAll('[data-a]'),function(bt){
       bt.addEventListener('click',function(){
@@ -759,7 +777,7 @@ window.addEventListener('resize',function(){
 });
 
 /* ============ départ ============ */
-fitView();renderMap();renderTabs();renderPanel();
+save();fitView();renderMap();renderTabs();renderPanel();
 </script>
 </body>
 </html>
