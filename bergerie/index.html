@@ -210,13 +210,12 @@ function trieHtml(){
     var lines='';
     rs.forEach(function(r){
       var same=r.b!=null&&r.b===r.a;
-      var who=lotShort(lotById(r.a))+((r.b==null)?'':(same?' des 2 côtés':' + '+lotShort(lotById(r.b))));
+      var who=lotShort(lotById(r.a))+((r.b==null)?'':(same?' des 2 côtés':' + '+lotShort(lotById(r.b))+' · ration commune'));
       var dots='<span class="dot" style="background:'+lotCol(r.a)+'"></span>'+((r.b==null)?'':'<span class="dot" style="background:'+lotCol(r.b)+'"></span>');
       var fed=state.feeds.filter(function(f){return (r.doses[f.id]||0)>0.0005;});
       function feedLine(f,compact){
         var pa=Math.round(perPlace(lotById(r.a),f.id)*1000);
-        var pb=(r.b==null)?0:Math.round(perPlace(lotById(r.b),f.id)*1000);
-        var split=(same?'<span class="su">2 × '+pa+' g</span>':((pb>0)?('<span class="su">'+pa+' + '+pb+' g</span>'):''));
+        var split=(same?'<span class="su">2 × '+pa+' g</span>':'');
         var nm='<span class="fc-emoji">'+feedEmoji(f.name)+'</span> '+esc(f.name);
         if(compact)return '<div class="trow">'+dots+'<span class="vv" style="flex:1">places <b>'+(r.k1+1)+'–'+r.k2+'</b> <span class="su">'+esc(who)+'</span> '+nm+'</span>'+split+'<b>'+Math.round(r.doses[f.id]*1000)+' g/place</b></div>';
         return '<div class="trow" style="padding-left:24px"><span class="vv" style="flex:1">'+nm+'</span>'+split+'<b>'+Math.round(r.doses[f.id]*1000)+' g/place</b></div>';
@@ -227,7 +226,7 @@ function trieHtml(){
   }
   return head+cards+
     '<div class="tot">À verser au total <b>'+fmt(grand)+' kg</b></div>'+
-    '<div class="hint">Places numérotées de 1 (à gauche). Chaque aliment a sa propre dose par place, à régler denrée par denrée. Sur un tapis double, chaque emplacement nourrit 2 brebis (une de chaque côté) : chaque dose additionne les 2 côtés. En moyenne, chaque brebis mange bien sa ration g/j.</div>';
+    '<div class="hint">Places numérotées de 1 (à gauche). Chaque aliment a sa propre dose par place, à régler denrée par denrée. Sur un tapis double, la trémie verse au milieu en une seule fois : impossible de différencier les 2 côtés — quand 2 lots se font face, ils reçoivent la même ration (les doses additionnent leurs besoins). En moyenne, chaque brebis mange bien sa ration g/j.</div>';
 }
 function feedEmoji(name){
   var n=(name||'').toLowerCase();
