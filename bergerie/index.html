@@ -204,15 +204,18 @@ function trieHtml(){
     grand+=tot;
     var lines=rs.map(function(r){
       var same=r.b!=null&&r.b===r.a;
-      var who=lotShort(lotById(r.a))+((r.b==null||same)?'':' + '+lotShort(lotById(r.b)));
-      var dots='<span class="dot" style="background:'+lotCol(r.a)+'"></span>'+((r.b==null||same)?'':'<span class="dot" style="background:'+lotCol(r.b)+'"></span>');
-      return '<div class="trow">'+dots+'<span class="vv" style="flex:1">places <b>'+(r.k1+1)+'–'+r.k2+'</b> <span class="su">'+esc(who)+'</span></span><b>'+Math.round(r.dose*1000)+' g/place</b></div>';
+      var pa=Math.round(perPlace(lotById(r.a),trieF)*1000);
+      var pb=(r.b==null)?0:Math.round(perPlace(lotById(r.b),trieF)*1000);
+      var who=lotShort(lotById(r.a))+((r.b==null)?'':(same?' des 2 côtés':' + '+lotShort(lotById(r.b))));
+      var dots='<span class="dot" style="background:'+lotCol(r.a)+'"></span>'+((r.b==null)?'':'<span class="dot" style="background:'+lotCol(r.b)+'"></span>');
+      var split=(same?'<span class="su">2 × '+pa+' g</span>':((pb>0)?('<span class="su">'+pa+' + '+pb+' g</span>'):''));
+      return '<div class="trow">'+dots+'<span class="vv" style="flex:1">places <b>'+(r.k1+1)+'–'+r.k2+'</b> <span class="su">'+esc(who)+'</span></span>'+split+'<b>'+Math.round(r.dose*1000)+' g/place</b></div>';
     }).join('');
     cards+='<div class="fcard" style="background:#fff"><div class="fc-top"><span class="fc-name">'+names[t]+'</span><span class="su">total '+fmt(tot,1)+' kg</span></div>'+(lines||'<div class="vv">rien à verser</div>')+'</div>';
   }
   return head+'<div class="row">'+chips+'</div>'+cards+
     '<div class="tot">À verser au total <b>'+fmt(grand)+' kg</b></div>'+
-    '<div class="hint">Places numérotées de 1 (à gauche). Sur un tapis double, la dose par place s’applique à l’emplacement : les 2 lots face à face sont additionnés. Le total versé = les rations g/j de toutes les brebis.</div>';
+    '<div class="hint">Places numérotées de 1 (à gauche). Sur un tapis double, chaque emplacement nourrit 2 brebis (une de chaque côté) : la dose additionne les 2 côtés — doublée si ton lot est seul des 2 côtés. En moyenne, chaque brebis mange bien sa ration g/j.</div>';
 }
 function feedEmoji(name){
   var n=(name||'').toLowerCase();
