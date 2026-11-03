@@ -493,9 +493,9 @@ function lotSection(id,withClose){
     var r=feedVal(l,f.id),t=lotTot(l,f.id),pp=perPlace(l,f.id)*1000;
     var w=max>0?Math.max(2,Math.round(Math.max(t,r)/max*100)):0;
     cards+='<div class="fcard" style="background:'+colFeed(f.id)+'1e">'+
-      '<div class="fc-top"><span class="dot" style="background:'+colFeed(f.id)+'"></span><span class="fc-name">'+esc(f.name)+'</span><span class="su" id="fp_'+f.id+'">'+(pp>0.5?'≈ '+Math.round(pp)+' g/pl':'—')+'</span></div>'+
+      '<div class="fc-top"><span class="dot" style="background:'+colFeed(f.id)+'"></span><span class="fc-name">'+esc(f.name)+'</span><span class="su" id="fp_'+f.id+'">'+(pp>0.5?'≈ '+Math.round(pp)+' g/place':'—')+'</span></div>'+
       '<div class="fc-bar"><div class="fc-fill" id="fbar_'+f.id+'" style="background:'+colFeed(f.id)+';width:'+w+'%"></div></div>'+
-      '<div class="fc-row"><input class="short" id="fg_'+f.id+'" inputmode="decimal" value="'+Math.round(r*1000)+'"><span class="vv">g/brebis</span><span class="vv">↔</span><input class="short" id="ft_'+f.id+'" inputmode="decimal" value="'+fmt(t,2)+'"><span class="vv">kg lot</span></div>'+
+      '<div class="fc-row"><input class="short" id="ft_'+f.id+'" inputmode="decimal" value="'+fmt(t,2)+'"><span class="vv">kg à verser</span><span class="vv">·</span><span class="vv">par brebis :</span><input class="short" id="fg_'+f.id+'" inputmode="decimal" value="'+Math.round(r*1000)+'"><span class="vv">g/j</span></div>'+
       '</div>';
   });
   if(!state.feeds.length)cards='<div class="vv">Aucun aliment : ajoute-en depuis l’onglet Bergerie.</div>';
@@ -507,9 +507,9 @@ function lotSection(id,withClose){
     '<div class="row"><span class="lbl">Places</span><span class="vv">T1 '+st.t[0]+' · T2 '+st.t[1]+' · T3 '+st.t[2]+' · TS '+st.t[3]+' → <b>'+st.P+' places</b></span></div>'+
     '<div class="sep"></div>'+
     cards+
-    '<div class="tot">Total du lot <b id="totKg">'+fmt(tot)+' kg</b><span class="su" id="totPer">'+((l.b||0)>0?'Σ ≈ '+Math.round(perAll)+' g/brebis/j':'saisis les brebis')+'</span></div>'+
+    '<div class="tot">À verser au lot <b id="totKg">'+fmt(tot)+' kg</b><span class="su" id="totPer">'+((l.b||0)>0?'soit ≈ '+Math.round(perAll)+' g/brebis/j':'saisis les brebis')+'</span></div>'+
     '<div class="row"><button class="act" id="btnApplyR">Appliquer ces rations à tous les lots</button></div>'+
-    '<div class="hint">Modifie g/brebis ou kg du lot : tout se recalcule, l’onglet Trémies suit.</div>';
+    '<div class="hint">Saisis les kg que tu verses à la trémie : la ration par brebis se calcule toute seule — ou l’inverse. L’onglet Trémies suit automatiquement.</div>';
 }
 function feedsManagerHtml(){
   var h='<div class="ph">Aliments</div>';
@@ -669,7 +669,7 @@ function bindLot(id){
       if(!(kind==='fg'&&f.id===fid)&&$('fg_'+f.id))$('fg_'+f.id).value=Math.round(r*1000);
       if(!(kind==='ft'&&f.id===fid)&&$('ft_'+f.id))$('ft_'+f.id).value=fmt((l.b||0)*r,2);
       var pp=perPlace(l,f.id)*1000;
-      if($('fp_'+f.id))$('fp_'+f.id).textContent=pp>0.5?'≈ '+Math.round(pp)+' g/pl':'—';
+      if($('fp_'+f.id))$('fp_'+f.id).textContent=pp>0.5?'≈ '+Math.round(pp)+' g/place':'—';
     });
     var max=0;state.feeds.forEach(function(f){max=Math.max(max,lotTot(l,f.id),feedVal(l,f.id));});
     state.feeds.forEach(function(f){
