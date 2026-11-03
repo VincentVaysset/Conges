@@ -683,7 +683,7 @@ function bindLot(id){
     });
     var tot=(l.b||0)*sumRations(l);
     if($('totKg'))$('totKg').textContent=fmt(tot)+' kg';
-    if($('totPer'))$('totPer').textContent=l.b>0?'Σ ≈ '+Math.round(sumRations(l)*1000)+' g/brebis/j':'saisis les brebis';
+    if($('totPer'))$('totPer').textContent=l.b>0?'soit ≈ '+Math.round(sumRations(l)*1000)+' g/brebis/j':'saisis les brebis';
     renderMap();save();
   }
   if(inB)inB.addEventListener('input',function(){l.b=Math.max(0,Math.round(pnum(inB.value)));refresh();});
