@@ -216,6 +216,16 @@ function lotStats(id){
 }
 function feedVal(l,fid){return (l.r&&l.r[fid])||0;}   /* kg par brebis */
 function setFeedVal(l,fid,v){l.r=l.r||{};l.r[fid]=v;}
+var anchorTk={}; /* dernier kg à verser connu par lot (effectif>0) */
+function setB(l,nb){ /* l'effectif varie, les kg à verser restent : la ration par brebis suit */
+  nb=Math.max(0,Math.round(nb)||0);
+  var ob=l.b||0;
+  if(ob>0){anchorTk[l.id]={};state.feeds.forEach(function(f){anchorTk[l.id][f.id]=ob*feedVal(l,f.id);});}
+  if(nb>0&&ob<=0&&anchorTk[l.id]){state.feeds.forEach(function(f){if(anchorTk[l.id][f.id]!=null)setFeedVal(l,f.id,anchorTk[l.id][f.id]/nb);});}
+  if(nb>0&&ob>0){state.feeds.forEach(function(f){setFeedVal(l,f.id,ob*feedVal(l,f.id)/nb);});}
+  l.b=nb;
+  return nb;
+}
 function sumRations(l){var s=0;if(!l)return 0;state.feeds.forEach(function(f){s+=feedVal(l,f.id);});return s;}
 function lotTot(l,fid){return (l.b||0)*feedVal(l,fid);}
 function perPlace(l,fid){if(!l||!(l.b>0))return 0;var st=lotStats(l.id);if(st.P<=0)return 0;return l.b*feedVal(l,fid)/st.P;}
@@ -514,7 +524,7 @@ function lotSection(id,withClose){
     cards+
     '<div class="tot">À verser au lot <b id="totKg">'+fmt(tot)+' kg</b><span class="su" id="totPer">'+((l.b||0)>0?'soit ≈ '+Math.round(perAll)+' g/brebis/j':'saisis les brebis')+'</span></div>'+
     '<div class="row"><button class="act" id="btnApplyR">Appliquer ces rations à tous les lots</button></div>'+
-    '<div class="hint">Saisis dans le sens qui t’arrange avec « Je saisis en » : tout se recalcule, l’onglet Trémies suit. Le choix est mémorisé.</div>';
+    '<div class="hint">Saisis dans le sens qui t’arrange avec « Je saisis en » : tout se recalcule, l’onglet Trémies suit. Le choix est mémorisé. Changer le nombre de brebis garde les kg à verser — la ration par brebis suit toute seule.</div>';
 }
 function feedsManagerHtml(){
   var h='<div class="ph">Aliments</div>';
@@ -686,7 +696,7 @@ function bindLot(id){
     if($('totPer'))$('totPer').textContent=l.b>0?'soit ≈ '+Math.round(sumRations(l)*1000)+' g/brebis/j':'saisis les brebis';
     renderMap();save();
   }
-  if(inB)inB.addEventListener('input',function(){l.b=Math.max(0,Math.round(pnum(inB.value)));refresh();});
+  if(inB)inB.addEventListener('input',function(){if(String(inB.value).trim()!=='')setB(l,pnum(inB.value));refresh();});
   state.feeds.forEach(function(f){
     var fg=$('fg_'+f.id),ft=$('ft_'+f.id);
     if(!fg)return;
@@ -697,7 +707,7 @@ function bindLot(id){
   if(pk)pk.addEventListener('click',function(){state.pref='kg';save();renderPanel();});
   if(pper)pper.addEventListener('click',function(){state.pref='per';save();renderPanel();});
   Array.prototype.forEach.call($('panel').querySelectorAll('.step'),function(bt){
-    bt.addEventListener('click',function(){l.b=Math.max(0,l.b+parseInt(bt.getAttribute('data-step'),10));inB.value=l.b;refresh();});
+    bt.addEventListener('click',function(){inB.value=setB(l,(l.b||0)+parseInt(bt.getAttribute('data-step'),10));refresh();});
   });
   var ba=$('btnApplyR');
   if(ba)ba.addEventListener('click',function(){
