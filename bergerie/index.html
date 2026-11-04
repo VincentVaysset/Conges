@@ -182,6 +182,7 @@ function save(){
   catch(e){storageKo=true;}
 }
 var state=loadS()||defaultState();
+state.lots.forEach(function(l){l.pp=l.pp||{};});
 var sel=null,showTrie=false,editName=null,editFeed=null,arm=null,notice='',panelMin=false;
 
 /* ============ géométrie ============ */
@@ -214,21 +215,28 @@ function lotStats(id){
   });
   return {t:t,P:t[0]+t[1]+t[2]+t[3],segs:segs};
 }
-function feedVal(l,fid){return (l.r&&l.r[fid])||0;}   /* kg par brebis */
-function setFeedVal(l,fid,v){l.r=l.r||{};l.r[fid]=v;}
+function ppVal(l,fid){return (l&&l.pp&&l.pp[fid]!=null)?l.pp[fid]:null;}  /* kg par place (ancre) ou null */
+function feedVal(l,fid){ /* kg par brebis — dérivé de l'ancre par place si présente */
+  var pv=ppVal(l,fid);
+  if(pv!=null){var st=lotStats(l.id);return (l.b>0&&st.P>0)?pv*st.P/(l.b):0;}
+  return (l.r&&l.r[fid])||0;
+}   /* kg par brebis */
+function setFeedVal(l,fid,v){l.r=l.r||{};l.r[fid]=v;l.pp=l.pp||{};delete l.pp[fid];}
+function setPP(l,fid,v){l.pp=l.pp||{};l.pp[fid]=v;l.r=l.r||{};delete l.r[fid];}
 var anchorTk={}; /* dernier kg à verser connu par lot (effectif>0) */
-function setB(l,nb){ /* l'effectif varie, les kg à verser restent : la ration par brebis suit */
+function setB(l,nb){ /* l'effectif varie : les kg à verser et les doses par place restent, la ration par brebis suit */
   nb=Math.max(0,Math.round(nb)||0);
   var ob=l.b||0;
-  if(ob>0){anchorTk[l.id]={};state.feeds.forEach(function(f){anchorTk[l.id][f.id]=ob*feedVal(l,f.id);});}
-  if(nb>0&&ob<=0&&anchorTk[l.id]){state.feeds.forEach(function(f){if(anchorTk[l.id][f.id]!=null)setFeedVal(l,f.id,anchorTk[l.id][f.id]/nb);});}
-  if(nb>0&&ob>0){state.feeds.forEach(function(f){setFeedVal(l,f.id,ob*feedVal(l,f.id)/nb);});}
+  function rOnly(f){return ppVal(l,f.id)==null;}
+  if(ob>0){anchorTk[l.id]={};state.feeds.forEach(function(f){if(!rOnly(f))return;anchorTk[l.id][f.id]=ob*feedVal(l,f.id);});}
+  if(nb>0&&ob<=0&&anchorTk[l.id]){state.feeds.forEach(function(f){if(!rOnly(f))return;if(anchorTk[l.id][f.id]!=null)setFeedVal(l,f.id,anchorTk[l.id][f.id]/nb);});}
+  if(nb>0&&ob>0){state.feeds.forEach(function(f){if(!rOnly(f))return;setFeedVal(l,f.id,ob*feedVal(l,f.id)/nb);});}
   l.b=nb;
   return nb;
 }
 function sumRations(l){var s=0;if(!l)return 0;state.feeds.forEach(function(f){s+=feedVal(l,f.id);});return s;}
 function lotTot(l,fid){return (l.b||0)*feedVal(l,fid);}
-function perPlace(l,fid){if(!l||!(l.b>0))return 0;var st=lotStats(l.id);if(st.P<=0)return 0;return l.b*feedVal(l,fid)/st.P;}
+function perPlace(l,fid){var pv=ppVal(l,fid);if(pv!=null)return pv;if(!l||!(l.b>0))return 0;var st=lotStats(l.id);if(st.P<=0)return 0;return l.b*((l.r&&l.r[fid])||0)/st.P;}
 function lotAt(i,k){
   var ks=ksOf(i),ls=state.airs[i].lots;
   for(var j=0;j<ks.length-1;j++)if(k>=ks[j]&&k<ks[j+1])return ls[j];
@@ -338,7 +346,7 @@ function importJson(text){
     s.feeds.forEach(function(f){mF=Math.max(mF,(f.id||0)+1);});
     s.nextLot=Math.max(s.nextLot||0,mL);
     s.nextFeed=Math.max(s.nextFeed||0,mF);
-    s.lots.forEach(function(l){l.b=l.b||0;l.r=l.r||{};});
+    s.lots.forEach(function(l){l.b=l.b||0;l.r=l.r||{};l.pp=l.pp||{};});
     return {ok:true,msg:'Import : '+s.lots.length+' lot(s), '+s.feeds.length+' aliment(s).',state:s};
   }catch(e){return {ok:false,msg:'Fichier illisible.'};}
 }
@@ -498,16 +506,24 @@ function lotSection(id,withClose){
     nameHtml=esc(lotName(l))+'<button class="btnsm" id="btnRename">'+ic('pen',12)+'</button><button class="btnsm'+(arm==='lot:'+id?' danger':'')+'" id="btnDelLot">'+(arm==='lot:'+id?'Confirmer':ic('trash',12))+'</button>';
   }
   var cards='',max=0;
-  var pKg=(state.pref||'kg')==='kg';
+  var pMode=state.pref||'kg';
   state.feeds.forEach(function(f){max=Math.max(max,lotTot(l,f.id),feedVal(l,f.id));});
   state.feeds.forEach(function(f){
     var r=feedVal(l,f.id),t=lotTot(l,f.id),pp=perPlace(l,f.id)*1000;
+    var anchored=ppVal(l,f.id)!=null;
     var w=max>0?Math.max(2,Math.round(Math.max(t,r)/max*100)):0;
-    var row=pKg?
-      '<div class="fc-row"><input class="short" id="ft_'+f.id+'" inputmode="decimal" value="'+fmt(t,2)+'"><span class="vv">kg à verser</span><span class="vv">·</span><span class="vv">par brebis :</span><input class="short" id="fg_'+f.id+'" inputmode="decimal" value="'+Math.round(r*1000)+'"><span class="vv">g/j</span></div>'
-      :'<div class="fc-row"><input class="short" id="fg_'+f.id+'" inputmode="decimal" value="'+Math.round(r*1000)+'"><span class="vv">g/brebis/j</span><span class="vv">·</span><span class="vv">kg du lot :</span><input class="short" id="ft_'+f.id+'" inputmode="decimal" value="'+fmt(t,2)+'"><span class="vv">kg</span></div>';
+    var row;
+    if(pMode==='place'){
+      row='<div class="fc-row"><input class="short" id="pp_'+f.id+'" inputmode="decimal" value="'+Math.round(pp)+'"><span class="vv">g/place</span>'+
+        '<span class="su">'+((l.b||0)>0?'par brebis : '+Math.round(r*1000)+' g/j':'par brebis : —')+'</span>'+
+        '<span class="su">'+fmt(t,1)+' kg</span></div>';
+    }else if(pMode==='kg'){
+      row='<div class="fc-row"><input class="short" id="ft_'+f.id+'" inputmode="decimal" value="'+fmt(t,2)+'"><span class="vv">kg à verser</span><span class="vv">·</span><span class="vv">par brebis :</span><input class="short" id="fg_'+f.id+'" inputmode="decimal" value="'+Math.round(r*1000)+'"><span class="vv">g/j</span></div>';
+    }else{
+      row='<div class="fc-row"><input class="short" id="fg_'+f.id+'" inputmode="decimal" value="'+Math.round(r*1000)+'"><span class="vv">g/brebis/j</span><span class="vv">·</span><span class="vv">kg du lot :</span><input class="short" id="ft_'+f.id+'" inputmode="decimal" value="'+fmt(t,2)+'"><span class="vv">kg</span></div>';
+    }
     cards+='<div class="fcard" style="background:'+colFeed(f.id)+'1e">'+
-      '<div class="fc-top"><span class="dot" style="background:'+colFeed(f.id)+'"></span><span class="fc-name">'+esc(f.name)+'</span><span class="su" id="fp_'+f.id+'">'+(pp>0.5?'≈ '+Math.round(pp)+' g/place':'—')+'</span></div>'+
+      '<div class="fc-top"><span class="dot" style="background:'+colFeed(f.id)+'"></span><span class="fc-name">'+esc(f.name)+'</span><span class="su" id="fp_'+f.id+'">'+(pp>0.5?(anchored?'réglée : ':'≈ ')+Math.round(pp)+' g/place':'—')+'</span></div>'+
       '<div class="fc-bar"><div class="fc-fill" id="fbar_'+f.id+'" style="background:'+colFeed(f.id)+';width:'+w+'%"></div></div>'+
       row+
       '</div>';
@@ -520,11 +536,11 @@ function lotSection(id,withClose){
     '<div class="row"><span class="lbl">Morceaux</span><span class="vv">'+segsTxt(st)+'</span></div>'+
     '<div class="row"><span class="lbl">Places</span><span class="vv">T1 '+st.t[0]+' · T2 '+st.t[1]+' · T3 '+st.t[2]+' · TS '+st.t[3]+' → <b>'+st.P+' places</b></span></div>'+
     '<div class="sep"></div>'+
-    '<div class="row"><span class="lbl">Je saisis en</span><button class="chip'+(pKg?' on':'')+'" id="prefKg">kg à verser</button><button class="chip'+(pKg?'':' on')+'" id="prefPer">g/brebis</button></div>'+
+    '<div class="row"><span class="lbl">Je saisis en</span><button class="chip'+(pMode==='kg'?' on':'')+'" id="prefKg">kg</button><button class="chip'+(pMode==='per'?' on':'')+'" id="prefPer">g/brebis</button><button class="chip'+(pMode==='place'?' on':'')+'" id="prefPlc">g/place</button></div>'+
     cards+
     '<div class="tot">À verser au lot <b id="totKg">'+fmt(tot)+' kg</b><span class="su" id="totPer">'+((l.b||0)>0?'soit ≈ '+Math.round(perAll)+' g/brebis/j':'saisis les brebis')+'</span></div>'+
     '<div class="row"><button class="act" id="btnApplyR">Appliquer ces rations à tous les lots</button></div>'+
-    '<div class="hint">Saisis dans le sens qui t’arrange avec « Je saisis en » : tout se recalcule, l’onglet Trémies suit. Le choix est mémorisé. Changer le nombre de brebis garde les kg à verser — la ration par brebis suit toute seule.</div>';
+    '<div class="hint">Saisis dans le sens qui t’arrange avec « Je saisis en ». En « g/place » la dose réglée à la trémie ne bouge plus : bouge les barrières, change les effectifs, crée des lots — l’appli recalcule la ration par brebis. Le choix est mémorisé.</div>';
 }
 function feedsManagerHtml(){
   var h='<div class="ph">Aliments</div>';
@@ -683,8 +699,9 @@ function bindLot(id){
       var r=feedVal(l,f.id);
       if(!(kind==='fg'&&f.id===fid)&&$('fg_'+f.id))$('fg_'+f.id).value=Math.round(r*1000);
       if(!(kind==='ft'&&f.id===fid)&&$('ft_'+f.id))$('ft_'+f.id).value=fmt((l.b||0)*r,2);
-      var pp=perPlace(l,f.id)*1000;
-      if($('fp_'+f.id))$('fp_'+f.id).textContent=pp>0.5?'≈ '+Math.round(pp)+' g/place':'—';
+      if(!(kind==='pp'&&f.id===fid)&&$('pp_'+f.id))$('pp_'+f.id).value=Math.round(perPlace(l,f.id)*1000);
+      var pp2=perPlace(l,f.id)*1000;
+      if($('fp_'+f.id))$('fp_'+f.id).textContent=pp2>0.5?((ppVal(l,f.id)!=null?'réglée : ':'≈ ')+Math.round(pp2)+' g/place'):'—';
     });
     var max=0;state.feeds.forEach(function(f){max=Math.max(max,lotTot(l,f.id),feedVal(l,f.id));});
     state.feeds.forEach(function(f){
@@ -702,16 +719,19 @@ function bindLot(id){
     if(!fg)return;
     fg.addEventListener('input',function(){setFeedVal(l,f.id,Math.max(0,pnum(fg.value))/1000);refresh('fg',f.id);});
     ft.addEventListener('input',function(){if(l.b>0)setFeedVal(l,f.id,Math.max(0,pnum(ft.value))/l.b);refresh('ft',f.id);});
+    var pe=$('pp_'+f.id);
+    if(pe)pe.addEventListener('input',function(){setPP(l,f.id,Math.max(0,pnum(pe.value))/1000);refresh('pp',f.id);});
   });
-  var pk=$('prefKg'),pper=$('prefPer');
+  var pk=$('prefKg'),pper=$('prefPer'),pplc=$('prefPlc');
   if(pk)pk.addEventListener('click',function(){state.pref='kg';save();renderPanel();});
   if(pper)pper.addEventListener('click',function(){state.pref='per';save();renderPanel();});
+  if(pplc)pplc.addEventListener('click',function(){state.pref='place';save();renderPanel();});
   Array.prototype.forEach.call($('panel').querySelectorAll('.step'),function(bt){
     bt.addEventListener('click',function(){inB.value=setB(l,(l.b||0)+parseInt(bt.getAttribute('data-step'),10));refresh();});
   });
   var ba=$('btnApplyR');
   if(ba)ba.addEventListener('click',function(){
-    state.lots.forEach(function(x){if(x.id!==l.id)x.r=JSON.parse(JSON.stringify(l.r||{}));});
+    state.lots.forEach(function(x){if(x.id!==l.id){x.r=JSON.parse(JSON.stringify(l.r||{}));x.pp=JSON.parse(JSON.stringify(l.pp||{}));}});
     save();renderPanel();
   });
   var br=$('btnRename');
