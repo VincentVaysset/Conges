@@ -2,6 +2,10 @@
   "name": "bergerie",
   "private": true,
   "description": "Ma bergerie — plan, lots, barrières et rations",
-  "scripts": { "test": "node tests/non-regression.js" },
-  "devDependencies": { "playwright": "^1.47.0" }
+  "scripts": {
+    "test": "node tests/modele.test.js && node tests/non-regression.js && node tests/stockage-horsligne.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.47.0"
+  }
 }
