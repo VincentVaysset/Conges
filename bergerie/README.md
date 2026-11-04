@@ -21,6 +21,8 @@ Plan interactif de la bergerie (35 m × 22 m) : aires, tapis, barrières, lots e
 ## Données
 - Enregistrement automatique sur l’appareil, avec contrôle : avertissement si le navigateur refuse d’enregistrer.
 - Exporter / Importer un fichier de sauvegarde (onglet Bergerie) : sécurité et passage vers un autre appareil.
+- Double enregistrement sur l’appareil (stockage du navigateur + base locale de secours) : si l’un est vidé, l’autre reprend tout seul.
+- Copies automatiques (onglet Bergerie) : fin de chaque journée sur 7 jours, plus une copie avant chaque remise à zéro, import ou restauration.
 
 ## Installer l’application
 - Android / Chrome : menu ⋮ → « Ajouter à l’écran d’accueil ».

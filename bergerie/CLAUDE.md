@@ -33,6 +33,13 @@ Appli de Vincent Vaysset, **éleveur ovin laitier bio** : plan numérique de sa 
 
 Fichiers : `index.html` (~53 Ko, tout-en-un), `README.md`, `manifest.webmanifest`, `sw.js`, `icon.svg`. Dernier commit : `466077f`.
 
+## 2 bis. Refonte v9 (04/11/2026) — architecture
+
+- `modele.js` : toute la logique métier, pure (fonctions `M.xxx(state, …)`), sans DOM. `index.html` n'en garde que des enveloppes du même nom (`lotStats(id)` → `M.lotStats(state,id)`), donc l'UI n'a pas changé.
+- `stockage.js` : localStorage `bergerie_lots_v5` (inchangé, relu à chaque écriture) + miroir IndexedDB (`bergerie`/`etats` : `courant`, `jour:AAAA-MM-JJ` ×7, `avant:<ISO>|<motif>` ×5). Secours auto si localStorage vide/abîmé. `navigator.storage.persist()`.
+- `sw.js` : cache `bergerie-v9`, scripts versionnés `?v=9` (**incrémenter partout à chaque version** : index.html, sw.js FICHIERS et CACHE), page réseau d'abord avec repli cache après 3 s.
+- Tests : `npm test` → `tests/modele.test.js` (Node), `tests/non-regression.js` (§6 dans Chromium), `tests/stockage-horsligne.js` (secours, copies, hors ligne). Tout doit passer avant de publier.
+
 ## 3. Géométrie de la bergerie (validée sur le terrain — ne pas modifier)
 
 - 35 m × 22 m, **3 places par mètre**.
