@@ -127,6 +127,25 @@ Ces scénarios ont été exécutés en harness DOM simulé sur la version actuel
 - UI : garder le plan interactif comme écran principal, la sobriété actuelle, le français, zéro emoji.
 - Le README.md du dossier décrit l'usage courant.
 
+## 9. Migration vers un dépôt dédié (à faire par Claude Code au premier run)
+
+Historiquement ce projet vit dans `Conges/bergerie/` (empreint au dépôt des congés de Vincent — à dissocier). Étapes :
+
+1. Créer le dépôt public `VincentVaysset/bergerie` et copier le contenu de `Conges/bergerie/` **à sa racine** (pas de sous-dossier).
+2. Activer GitHub Pages sur la branche `main` → nouvelle URL `https://vincentvaysset.github.io/bergerie/`.
+3. **localStorage est lié au domaine** (`vincentvaysset.github.io`), pas au chemin : les données de Vincent (clé `bergerie_lots_v5`) suivent automatiquement, rien à transférer.
+4. Quand Vincent confirme que la nouvelle URL marche et que son raccourci téléphone est réinstallé depuis la nouvelle adresse : supprimer le dossier `bergerie/` du dépôt Conges. Ne pas le faire avant.
+
+```bash
+gh repo create bergerie --public --description "Ma bergerie — plan, lots, barrières et rations"
+mkdir bergerie && cp -r Conges/bergerie/* bergerie/ && cd bergerie
+git init -b main && git add . && git commit -m "Migration depuis Conges/bergerie"
+git remote add origin https://github.com/VincentVaysset/bergerie.git
+git push -u origin main
+gh api -X POST repos/VincentVaysset/bergerie/pages -f "source[branch]=main" -f "source[path]=/"
+```
+(Pages peut aussi s'activer à la main : Settings → Pages → Deploy from a branch → main. Si `gh` n'est pas installé : `winget install GitHub.cli` puis `gh auth login`.)
+
 ## 8. Histoire des versions (ce qui a été essayé et rejeté)
 
 - v6.1 : « 300 g/brebis → 357 g/place, pas possible » → c'était une question de places > brebis, pas un bug.
