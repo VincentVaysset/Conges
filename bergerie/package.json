@@ -1,0 +1,7 @@
+{
+  "name": "bergerie",
+  "private": true,
+  "description": "Ma bergerie — plan, lots, barrières et rations",
+  "scripts": { "test": "node tests/non-regression.js" },
+  "devDependencies": { "playwright": "^1.47.0" }
+}
