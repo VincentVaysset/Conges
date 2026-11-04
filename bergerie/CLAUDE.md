@@ -2,6 +2,17 @@
 
 Tu prends la suite de ce projet. Ce document contient TOUT ce qu'il faut savoir : le contexte, les règles métier validées sur le terrain (chaque point a coûté un aller-retour avec l'utilisateur — ne les régresse pas), le modèle de données exact, et des tests de non-régression avec des chiffres attendus.
 
+## 0. L'attente (la vision)
+
+Un **outil du quotidien à la bergerie**, pas un gadget :
+
+- Le plan reflète la bergerie **telle qu'elle est** (35 × 22 m, aires, tapis, barrières).
+- **Un seul geste par jour** : Vincent adapte ses lots physiques (agnelage progressif : lots créés, barrières déplacées, effectifs rectifiés) et l'appli dit aussitôt **quoi régler aux trémies** (g/place par tapis et par plage — et confirmation que rien n'a bougé s'il n'a rien changé) et **ce que mange chaque brebis en moyenne** (kg versés ÷ têtes = g/j).
+- **La physique avant tout** : la trémie verse en une fois au milieu du tapis — ne jamais suggérer l'impossible. Le calcul suit la réalité, jamais l'inverse.
+- **Fiable, hors ligne, sans perte** : à la bergerie il n'y a pas toujours de réseau ; données locales et exportables. Un chiffre faux = du concentré mal dosé — l'exactitude prime (contrôle par lot systématique).
+- **Sobre et lisible d'un coup d'œil** (mains pas propres, souvent pressé) : gros chiffres, français, zéro fioriture. Une appli d'éleveur, pas de bureau.
+- La refonte en vraie app garde **le modèle métier et les données actuelles, intouchables**, en plus fluide et rapide à ouvrir.
+
 ## 1. Le projet en bref
 
 Appli de Vincent Vaysset, **éleveur ovin laitier bio** : plan numérique de sa bergerie (35 m × 22 m) pour gérer ses **lots de brebis, barrières, rations et réglages de trémies** (distributeurs de concentré le long des auges). Aujourd'hui : single-page app HTML/CSS/JS vanilla, **zéro dépendance**, un seul fichier, publiée sur GitHub Pages : https://vincentvaysset.github.io/Conges/bergerie/ — dépôt `VincentVaysset/Conges`, branche `main`, ce sous-dossier `bergerie/`. Objectif : en faire une vraie app.
